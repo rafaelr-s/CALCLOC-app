@@ -23,7 +23,7 @@ def calcular_valores_bobinas(itens, preco_m2):
 # Lista de Produtos
 # ============================
 produtos_lista = [
-    "Lonil de PVC", "Lonil KP", "Lonil Inflável KP", "Encerado", "Duramax", "Lonaleve",
+    " ", "Lonil de PVC", "Lonil KP", "Lonil Inflável KP", "Encerado", "Duramax", "Lonaleve",
     "Sider Truck Teto", "Sider Truck Lateral", "Capota Marítima", "Night&Day Plus 1,40",
     "Night&Day Plus 2,00", "Night&Day Listrado", "Vitro 0,40", "Vitro 0,50", "Vitro 0,60",
     "Vitro 0,80", "Vitro 1,00", "Durasol", "Poli Light", "Sunset", "Tenda", "Tenda 2,3x2,3",
@@ -52,7 +52,7 @@ st.title("Orçamento - Grupo Locomotiva")
 # Data e hora atual de Brasília
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
-st.markdown(f"🕒 **Data e Hora (Brasília):** {data_hora_brasilia}")
+st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
 st.write("Preencha os dados abaixo:")
 
@@ -196,10 +196,29 @@ if tipo_produto == "Bobina":
             st.experimental_rerun()
 
 # ============================
+# Observações
+# ============================
+st.markdown("---")
+st.subheader("🔎 Observações")
+col1, col2= st.columns(2)
+with col1:
+    Observação = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
+
+# ============================
+# Cliente
+# ============================
+st.markdown("---")
+st.subheader("👤 Dados do Cliente")
+col1, col2 = st.columns(2)
+with col1:
+    Cliente_nome = st.text_input("Razão ou Nome Fantasia")
+    Cliente_CNPJ = st.text_input("CNPJ (opcional)")
+
+# ============================
 # Vendedor (opcional)
 # ============================
 st.markdown("---")
-st.subheader("👤 Informações do(a) Vendedor(a) (opcional)")
+st.subheader("🗣️ Vendedor(a)")
 col1, col2 = st.columns(2)
 with col1:
     vendedor_nome = st.text_input("Nome")
