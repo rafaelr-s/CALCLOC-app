@@ -88,7 +88,7 @@ st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
 # Dados principais
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
-tipo_cliente = st.selectbox("Tipo do Cliente:", ["Consumidor Final", "Revenda"])
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
 estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
 # ICMS automático
