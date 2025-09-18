@@ -5,6 +5,23 @@ from fpdf import FPDF
 from io import BytesIO
 
 # ============================
+# Funções de cálculo
+# ============================
+def calcular_valores_confeccionados(itens, preco_m2):
+    m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
+    valor_bruto = m2_total * preco_m2
+    valor_ipi = valor_bruto * 0.0325
+    valor_final = valor_bruto + valor_ipi
+    return m2_total, valor_bruto, valor_ipi, valor_final
+
+def calcular_valores_bobinas(itens, preco_m2):
+    m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
+    valor_bruto = m_total * preco_m2
+    valor_ipi = valor_bruto * 0.0975
+    valor_final = valor_bruto + valor_ipi
+    return m_total, valor_bruto, valor_ipi, valor_final
+
+# ============================
 # Função para formatar em R$
 # ============================
 def _format_brl(v):
@@ -84,7 +101,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
         pdf.multi_cell(0, 5, observacao)
         pdf.ln(3)
 
-    # Vendedor (final da página)
+    # Vendedor
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "VENDEDOR", ln=True)
     pdf.set_font("Arial", size=9)
@@ -93,14 +110,13 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
     pdf.ln(4)
 
-    # Gera bytes e retorna BytesIO
     pdf_bytes = pdf.output(dest='S').encode('latin-1') if isinstance(pdf.output(dest='S'), str) else pdf.output(dest='S')
     buffer = BytesIO(pdf_bytes)
     buffer.seek(0)
     return buffer
 
 # ============================
-# Inicialização de listas no session_state
+# Inicialização de session_state
 # ============================
 if "itens_confeccionados" not in st.session_state:
     st.session_state["itens_confeccionados"] = []
@@ -108,12 +124,12 @@ if "bobinas_adicionadas" not in st.session_state:
     st.session_state["bobinas_adicionadas"] = []
 
 # ============================
-# CLIENTE no topo da página
+# Configurações da página
 # ============================
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
-st.markdown("---")
+# Dados do cliente
 st.subheader("👤 Dados do Cliente")
 col1, col2 = st.columns(2)
 with col1:
@@ -122,40 +138,11 @@ with col2:
     Cliente_CNPJ = st.text_input("CNPJ (opcional)")
 
 # ============================
-# Botão para baixar PDF no topo
-# ============================
-if st.button("📄 Gerar Orçamento em PDF"):
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
-    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-
-    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": st.session_state.get("vendedor_nome",""), 
-                "tel": st.session_state.get("vendedor_tel",""), 
-                "email": st.session_state.get("vendedor_email","")}
-    Observacao = st.session_state.get("Observacao","")
-
-    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
-                               st.session_state['itens_confeccionados'],
-                               st.session_state['bobinas_adicionadas'],
-                               resumo_conf, resumo_bob,
-                               Observacao, "", None, None)
-
-    st.download_button(
-        label="⬇️ Baixar Orçamento em PDF",
-        data=pdf_buffer,
-        file_name="orcamento.pdf",
-        mime="application/pdf"
-    )
-
-# ============================
 # Tabelas de ICMS e ST
 # ============================
 icms_por_estado = {
-    "SP": 18,
-    "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12,
+    "SP": 18, "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12
 }
-
-# Estados restantes 7%
 todos_estados = [
     "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MT","MS",
     "PA","PB","PE","PI","RN","RO","RR","SE","TO"
@@ -163,7 +150,6 @@ todos_estados = [
 for uf in todos_estados:
     icms_por_estado[uf] = 7
 
-# Percentuais de ST (última atualização geral Brasil)
 st_por_estado = {
     "SP": 14, "RJ": 27, "MG": 22, "ES": 0, "PR": 22, "RS": 20, "SC": 0,
     "BA": 29, "PE": 29, "CE": 19, "RN": 0, "PB": 29, "SE": 0, "AL": 29,
@@ -171,6 +157,58 @@ st_por_estado = {
     "AM": 29, "PA": 26, "RO": 0, "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
 }
 
+# ============================
+# Produtos
+# ============================
+produtos_lista = [" ", "Lonil de PVC", "Lonil KP", "Lonil Inflável KP", "Encerado", "Duramax"]
+prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
+
+# Dados do produto
+produto = st.selectbox("Nome do Produto:", options=produtos_lista)
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
+preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
+tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
+
+aliquota_icms = icms_por_estado[estado]
+st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+aliquota_st = None
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a": **{aliquota_st}%**")
+
+produto_exige_espessura = produto.startswith(prefixos_espessura)
+
+# ============================
+# Botão para gerar PDF
+# ============================
+if st.button("📄 Gerar Orçamento em PDF"):
+    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
+    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
+
+    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
+    vendedor = {
+        "nome": st.session_state.get("vendedor_nome",""), 
+        "tel": st.session_state.get("vendedor_tel",""), 
+        "email": st.session_state.get("vendedor_email","")
+    }
+    Observacao = st.session_state.get("Observacao","")
+
+    pdf_buffer = gerar_pdf_fpdf(
+        cliente, vendedor,
+        st.session_state['itens_confeccionados'],
+        st.session_state['bobinas_adicionadas'],
+        resumo_conf, resumo_bob,
+        Observacao, estado, aliquota_icms, aliquota_st
+    )
+
+    st.download_button(
+        label="⬇️ Baixar Orçamento em PDF",
+        data=pdf_buffer,
+        file_name="orcamento.pdf",
+        mime="application/pdf"
+    )
 # ============================
 # Funções de cálculo
 # ============================
