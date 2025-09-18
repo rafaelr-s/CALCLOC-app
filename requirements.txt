@@ -1,5 +1,5 @@
 streamlit
-pandas
+BytesIO
 reportlab
 pytz
 datetime
