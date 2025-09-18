@@ -13,14 +13,21 @@ def _format_brl(v):
 # ============================
 # Função para gerar PDF
 # ============================
-def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, aliquota_icms, aliquota_st):
-    pdf = FPDF(orientation='P', unit='mm', format='A4')
+def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, icms, st_valor):
+    pdf = FPDF()
     pdf.add_page()
-    pdf.set_auto_page_break(False)
+    pdf.set_font("Arial", size=12)
+
+    # === Adiciona a imagem do logo centralizado no topo ===
+    logo_path = "Capturar 12.PNG"
+    page_width = 210
+    x_position = (page_width - logo_width) / 2
+    pdf.image(logo_path, x=x_position, y=8, w=logo_width)
+    pdf.ln(40) 
 
     # Cabeçalho
     pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 8, "ORÇAMENTO DETALHADO", ln=True, align='C')
+    pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align='C')
     pdf.ln(2)
     pdf.set_font("Arial", size=9)
     pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
