@@ -28,7 +28,7 @@ for uf in todos_estados:
 
 # Percentuais de ST (última atualização geral Brasil)
 st_por_estado = {
-    "SP": 13.87, "RJ": 27.02, "MG": 22.26, "ES": 0.0, "PR": 22.26, "RS": 19.97, "SC": 0.0,
+    "SP": 13.87, "RJ": 27.02, "MG": 22.00, "ES": 0.0, "PR": 22.26, "RS": 19.97, "SC": 0.0,
     "BA": 29.21, "PE": 29.21, "CE": 19.02, "RN": 0.0, "PB": 29.21, "SE": 0.0, "AL": 29.21,
     "DF": 29.21, "GO": 0.0, "MS": 0.0, "MT": 22.01,
     "AM": 29.21, "PA": 26.79, "RO": 0.0, "RR": 26.79, "AC": 26.79, "AP": 29.21, "MA": 29.21, "PI": 22.51, "TO": 0.0
