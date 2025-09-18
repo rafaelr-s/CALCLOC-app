@@ -405,26 +405,4 @@ tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
 
 produto_exige_espessura = produto.startswith(prefixos_espessura)
 
-# ============================
-# Cliente
-# ============================
-st.markdown("---")
-st.subheader("👤 Dados do Cliente")
-col1, col2 = st.columns(2)
-with col1:
-    Cliente_nome = st.text_input("Razão ou Nome Fantasia")
-    Cliente_CNPJ = st.text_input("CNPJ (opcional)")
-
-# ============================
-# Vendedor (opcional)
-# ============================
-st.markdown("---")
-st.subheader("🗣️ Vendedor(a)")
-col1, col2 = st.columns(2)
-with col1:
-    vendedor_nome = st.text_input("Nome")
-    vendedor_tel = st.text_input("Telefone")
-with col2:
-    vendedor_email = st.text_input("E-mail")
-
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
