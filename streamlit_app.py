@@ -99,7 +99,7 @@ st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso 
 aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} próximo a: **{aliquota_st}%**")
 
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
@@ -153,11 +153,11 @@ if tipo_produto == "Confeccionado":
         st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**". replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final com IPI (3.25%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
         if aliquota_st:
             valor_com_st = valor_final * (1 + aliquota_st / 100)
-            st.error(f"💰 Valor Final com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+            st.error(f"💰 Valor Aproximado com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
        
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
@@ -225,7 +225,7 @@ if tipo_produto == "Bobina":
         st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final com IPI (9.75%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
