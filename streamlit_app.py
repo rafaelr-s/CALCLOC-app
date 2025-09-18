@@ -179,7 +179,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
     resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
     resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
 
-    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
+    cliente = {"Razão ou Nome Fantasia": Cliente_nome, "CNPJ (opcional)": Cliente_CNPJ}
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
 
     # Certifique-se de que Observacao está definido antes de usar
