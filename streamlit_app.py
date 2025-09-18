@@ -4,15 +4,21 @@ import streamlit as st
 from fpdf import FPDF
 from io import BytesIO
 
+# ============================
+# Função para formatar em R$
+# ============================
 def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+# ============================
+# Função para gerar PDF
+# ============================
 def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, aliquota_icms, aliquota_st):
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_auto_page_break(False)
 
-    # cabeçalho
+    # Cabeçalho
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 8, "ORÇAMENTO DETALHADO", ln=True, align='C')
     pdf.ln(2)
@@ -20,7 +26,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
-    # cliente
+    # Cliente
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
@@ -28,16 +34,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 5, f"CNPJ: {cliente.get('cnpj','')}", ln=True)
     pdf.ln(3)
 
-    # vendedor
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, "VENDEDOR", ln=True)
-    pdf.set_font("Arial", size=9)
-    pdf.cell(0, 5, f"Nome: {vendedor.get('nome','')}", ln=True)
-    pdf.cell(0, 5, f"Tel: {vendedor.get('tel','')}", ln=True)
-    pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
-    pdf.ln(4)
-
-    # itens confeccionados
+    # Itens confeccionados
     if itens_conf:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS CONFECCIONADOS", ln=True)
@@ -57,7 +54,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
                 pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
             pdf.ln(3)
 
-    # itens bobinas
+    # Itens bobinas
     if itens_bob:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS BOBINAS", ln=True)
@@ -79,7 +76,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
                 pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
             pdf.ln(3)
 
-    # observações
+    # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "OBSERVAÇÕES", ln=True)
@@ -87,11 +84,21 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
         pdf.multi_cell(0, 5, observacao)
         pdf.ln(3)
 
+    # Vendedor (final da página)
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 6, "VENDEDOR", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(0, 5, f"Nome: {vendedor.get('nome','')}", ln=True)
+    pdf.cell(0, 5, f"Tel: {vendedor.get('tel','')}", ln=True)
+    pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
+    pdf.ln(4)
+
     # Gera bytes e retorna BytesIO
     pdf_bytes = pdf.output(dest='S').encode('latin-1')
     buffer = BytesIO(pdf_bytes)
     buffer.seek(0)
     return buffer
+
 
 # ============================
 # Inicialização de listas no session_state
@@ -100,6 +107,46 @@ if "itens_confeccionados" not in st.session_state:
     st.session_state["itens_confeccionados"] = []
 if "bobinas_adicionadas" not in st.session_state:
     st.session_state["bobinas_adicionadas"] = []
+
+# ============================
+# CLIENTE no topo da página
+# ============================
+st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
+st.title("Orçamento - Grupo Locomotiva")
+
+st.markdown("---")
+st.subheader("👤 Dados do Cliente")
+col1, col2 = st.columns(2)
+with col1:
+    Cliente_nome = st.text_input("Razão ou Nome Fantasia")
+with col2:
+    Cliente_CNPJ = st.text_input("CNPJ (opcional)")
+
+# ============================
+# Botão para baixar PDF no topo
+# ============================
+if st.button("📄 Gerar Orçamento em PDF"):
+    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
+    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
+
+    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
+    vendedor = {"nome": st.session_state.get("vendedor_nome",""), 
+                "tel": st.session_state.get("vendedor_tel",""), 
+                "email": st.session_state.get("vendedor_email","")}
+    Observacao = st.session_state.get("Observacao","")
+
+    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
+                               st.session_state['itens_confeccionados'],
+                               st.session_state['bobinas_adicionadas'],
+                               resumo_conf, resumo_bob,
+                               Observacao, "", None, None)
+
+    st.download_button(
+        label="⬇️ Baixar Orçamento em PDF",
+        data=pdf_buffer,
+        file_name="orcamento.pdf",
+        mime="application/pdf"
+    )
 
 # ============================
 # Tabelas de ICMS e ST
@@ -171,31 +218,6 @@ prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesiv
 # ============================
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
-
-# ===================================
-# Botão para baixar PDF
-# ===================================
-if st.button("📄 Gerar Orçamento em PDF"):
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
-    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-
-    cliente = {"👤 Dados do Cliente": Cliente_nome, "CNPJ (opcional)": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
-
-    # Certifique-se de que Observacao está definido antes de usar
-    Observações = st.session_state.get("Observações", "")
-
-    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
-                               st.session_state['itens_confeccionados'],
-                               st.session_state['bobinas_adicionadas'],
-                               resumo_conf, resumo_bob,
-                               Observações, estado, aliquota_icms, aliquota_st)
-    st.download_button(
-        label="⬇️ Baixar Orçamento em PDF",
-        data=pdf_buffer,
-        file_name="orcamento.pdf",
-        mime="application/pdf"
-    )
 
 # Data e hora
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
@@ -354,16 +376,6 @@ st.markdown("---")
 st.subheader("🔎 Observações")
 Observacao = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
 
-
-# ============================
-# Cliente
-# ============================
-st.markdown("---")
-st.subheader("👤 Dados do Cliente")
-col1, col2 = st.columns(2)
-with col1:
-    Cliente_nome = st.text_input("Razão ou Nome Fantasia")
-    Cliente_CNPJ = st.text_input("CNPJ (opcional)")
 
 # ============================
 # Vendedor (opcional)
