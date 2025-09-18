@@ -172,6 +172,31 @@ prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesiv
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
+# ===================================
+# Botão para baixar PDF
+# ===================================
+if st.button("📄 Gerar Orçamento em PDF"):
+    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
+    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
+
+    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
+    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
+
+    # Certifique-se de que Observacao está definido antes de usar
+    Observações = st.session_state.get("Observações", "")
+
+    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
+                               st.session_state['itens_confeccionados'],
+                               st.session_state['bobinas_adicionadas'],
+                               resumo_conf, resumo_bob,
+                               Observações, estado, aliquota_icms, aliquota_st)
+    st.download_button(
+        label="⬇️ Baixar Orçamento em PDF",
+        data=pdf_buffer,
+        file_name="orcamento.pdf",
+        mime="application/pdf"
+    )
+
 # Data e hora
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
@@ -354,30 +379,6 @@ with col2:
 
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
 
-# ===================================
-# Botão para baixar PDF
-# ===================================
-if st.button("📄 Gerar Orçamento em PDF"):
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
-    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
 
-    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
 
-    # Certifique-se de que Observacao está definido antes de usar
-    Observacao = st.session_state.get("Observacao", "")
 
-    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
-                               st.session_state['itens_confeccionados'],
-                               st.session_state['bobinas_adicionadas'],
-                               resumo_conf, resumo_bob,
-                               Observacao, estado, aliquota_icms, aliquota_st)
-
-    st.download_button(
-        label="⬇️ Baixar Orçamento em PDF",
-        data=pdf_buffer,
-        file_name="orcamento.pdf",
-        mime="application/pdf"
-    )
-
-st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
