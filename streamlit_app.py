@@ -99,9 +99,10 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
 
     # Gera BytesIO de forma segura
     pdf_bytes = pdf.output(dest='S').encode('latin1', errors='replace')
-    buffer = BytesIO(pdf_bytes)
+    buffer = BytesIO()
+    pdf.output(buffer)
     buffer.seek(0)
-    return buffer 
+    return buffer
 
 # ============================
 # Inicialização de listas
