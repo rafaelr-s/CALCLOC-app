@@ -3,6 +3,38 @@ from datetime import datetime
 import pytz
 
 # ============================
+# Inicialização de listas no session_state
+# ============================
+if "itens_confeccionados" not in st.session_state:
+    st.session_state["itens_confeccionados"] = []
+if "bobinas_adicionadas" not in st.session_state:
+    st.session_state["bobinas_adicionadas"] = []
+
+# ============================
+# Tabelas de ICMS e ST
+# ============================
+icms_por_estado = {
+    "SP": 18,
+    "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12,
+}
+
+# Estados restantes 7%
+todos_estados = [
+    "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MT","MS",
+    "PA","PB","PE","PI","RN","RO","RR","SE","TO"
+]
+for uf in todos_estados:
+    icms_por_estado[uf] = 7
+
+# Percentuais de ST (última atualização geral Brasil)
+st_por_estado = {
+    "SP": 13.87, "RJ": 27.02, "MG": 22.26, "ES": 0.0, "PR": 22.26, "RS": 19.97, "SC": 0.0,
+    "BA": 29.21, "PE": 29.21, "CE": 19.02, "RN": 0.0, "PB": 29.21, "SE": 0.0, "AL": 29.21,
+    "DF": 29.21, "GO": 0.0, "MS": 0.0, "MT": 22.01,
+    "AM": 29.21, "PA": 26.79, "RO": 0.0, "RR": 26.79, "AC": 26.79, "AP": 29.21, "MA": 29.21, "PI": 22.51, "TO": 0.0
+}
+
+# ============================
 # Funções de cálculo
 # ============================
 def calcular_valores_confeccionados(itens, preco_m2):
@@ -49,30 +81,30 @@ prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesiv
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
-# Data e hora atual de Brasília
+# Data e hora
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
 st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
-st.write("Preencha os dados abaixo:")
-
-# Inicialização dos estados
-if 'itens_confeccionados' not in st.session_state:
-    st.session_state['itens_confeccionados'] = []
-
-if 'bobinas_adicionadas' not in st.session_state:
-    st.session_state['bobinas_adicionadas'] = []
-
-# Entrada de dados principais
+# Dados principais
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
+tipo_cliente = st.selectbox("Tipo do Cliente:", ["Consumidor Final", "Revenda"])
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
+
+# ICMS automático
+aliquota_icms = icms_por_estado[estado]
+st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+# ST aparece só se Encerado + Revenda
+aliquota_st = None
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
+
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
-icms = st.selectbox("Alíquota de ICMS (já incluso no preço):", [18, 12, 7, 4, 0])
 
 produto_exige_espessura = produto.startswith(prefixos_espessura)
-espessura = None
-if produto_exige_espessura:
-    espessura = st.number_input("Espessura (mm):", min_value=0.01, value=1.0, step=0.01)
 
 # ============================
 # Produtos Confeccionados
@@ -118,14 +150,18 @@ if tipo_produto == "Confeccionado":
 
         st.markdown("---")
         st.success("💰 **Resumo do Confeccionado**")
-        st.write(f"📏 Área Total: **{m2_total:.2f} m²**")
-        st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**")
-        st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**")
-        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**")
+        st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**". replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
-        if st.button("🧹 Limpar Itens"):
-            st.session_state['itens_confeccionados'] = []
-            st.experimental_rerun()
+        if aliquota_st:
+            valor_com_st = valor_final * (1 + aliquota_st / 100)
+            st.error(f"💰 Valor Final com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+       
+    if st.button("🧹 Limpar Itens"):
+        st.session_state['itens_confeccionados'] = []
+        st.experimental_rerun()
 
 # ============================
 # Produtos Bobina
@@ -144,7 +180,7 @@ if tipo_produto == "Bobina":
     # Campo de espessura para bobinas (se aplicável)
     espessura_bobina = None
     if produto_exige_espessura:
-        espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.01, value=espessura or 1.0, step=0.01, key="esp_bob")
+        espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.01, value=0.10, step=0.01, key="esp_bob")
 
     if st.button("➕ Adicionar Bobina"):
         item_bobina = {
@@ -186,10 +222,10 @@ if tipo_produto == "Bobina":
 
         st.markdown("---")
         st.success("💰 **Resumo das Bobinas**")
-        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**")
-        st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**")
-        st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**")
-        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**")
+        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
@@ -200,9 +236,7 @@ if tipo_produto == "Bobina":
 # ============================
 st.markdown("---")
 st.subheader("🔎 Observações")
-col1, col2= st.columns(2)
-with col1:
-    Observação = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
+Observacao = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
 
 # ============================
 # Cliente
