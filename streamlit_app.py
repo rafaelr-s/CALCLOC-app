@@ -18,14 +18,6 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
-    # Adiciona a imagem do logo centralizado no topo
-    logo_path = "Capturar 12.PNG"
-    page_width = 210  # Largura da página A4
-    logo_width = 30  # Largura do logo (ajuste conforme necessário)
-    x_position = (page_width - logo_width) / 2  # Centraliza o logo horizontalmente
-    pdf.image(logo_path, x=x_position, y=8, w=logo_width)
-    pdf.ln(40)
-
     # Cabeçalho
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align='C')
@@ -102,8 +94,9 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.ln(4)
 
     # Gera bytes e retorna BytesIO
-    pdf_bytes = pdf.output(dest="S").encode("latin-1") if isinstance(pdf.output(dest="S"), str) else pdf.output(dest="S")
+    pdf_bytes = pdf.output(dest='S').encode('latin-1') if isinstance(pdf.output(dest='S'), str) else pdf.output(dest='S')
     buffer = BytesIO(pdf_bytes)
+    buffer.seek(0)
     return buffer
 
 # ============================
