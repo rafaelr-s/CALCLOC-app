@@ -14,13 +14,18 @@ def _format_brl(v):
 # Função para gerar PDF
 # ============================
 def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, icms, st_valor):
+    from fpdf import FPDF
+    from io import BytesIO
+    from datetime import datetime
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_font("Arial", size=12)
-    w = pdf.w - 2*pdf.l_margin  # largura segura
 
+    # -------------------------
     # Cabeçalho
+    # -------------------------
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align='C')
     pdf.ln(2)
@@ -28,36 +33,45 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
-    # Cliente
+    # -------------------------
+    # Dados do Cliente
+    # -------------------------
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(w, 5, f"Nome/Razão: {str(cliente.get('nome',''))}")
-    pdf.multi_cell(w, 5, f"CNPJ/CPF: {str(cliente.get('cnpj',''))}")
+    nome_cliente = str(cliente.get('nome', '') or '')
+    cnpj_cliente = str(cliente.get('cnpj', '') or '')
+    pdf.multi_cell(0, 5, f"Nome/Razão: {nome_cliente}")
+    if cnpj_cliente.strip():
+        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cnpj_cliente}")
     pdf.ln(3)
 
+    # -------------------------
     # Itens Confeccionados
+    # -------------------------
     if itens_conf:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS CONFECCIONADOS", ln=True)
         pdf.set_font("Arial", size=8)
         for item in itens_conf:
             txt = f"{item.get('quantidade',0)}x {item.get('produto','')} - {item.get('comprimento',0)}m x {item.get('largura',0)}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(w, 5, str(txt))
+            pdf.multi_cell(0, 5, txt)
 
         if resumo_conf:
             m2, bruto, ipi, final = resumo_conf
             pdf.ln(1)
             pdf.set_font("Arial", size=9)
-            pdf.multi_cell(w,5,f"Área total: {m2:.2f} m² | Valor bruto: {_format_brl(bruto)}")
-            pdf.multi_cell(w,5,f"IPI (3.25%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}")
+            pdf.cell(0, 5, f"Área total: {m2:.2f} m² | Valor bruto: {_format_brl(bruto)}", ln=True)
+            pdf.cell(0, 5, f"IPI (3.25%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}", ln=True)
             if icms is not None:
-                pdf.multi_cell(w,5,f"ICMS (incluso): {icms}%")
+                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
             if st_valor:
-                pdf.multi_cell(w,5,f"ST aproximada: {st_valor}%")
+                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
             pdf.ln(3)
 
+    # -------------------------
     # Itens Bobinas
+    # -------------------------
     if itens_bob:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS BOBINAS", ln=True)
@@ -66,39 +80,44 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
             txt = f"{item.get('quantidade',0)}x {item.get('produto','')} - {item.get('comprimento',0)}m | Largura: {item.get('largura',0)}m | Cor: {item.get('cor','')}"
             if 'espessura' in item:
                 txt += f" | Esp: {item.get('espessura',0)}mm"
-            pdf.multi_cell(w, 5, str(txt))
+            pdf.multi_cell(0, 5, txt)
 
         if resumo_bob:
             m, bruto, ipi, final = resumo_bob
             pdf.ln(1)
             pdf.set_font("Arial", size=9)
-            pdf.multi_cell(w,5,f"Metros totais: {m:.2f} m | Valor bruto: {_format_brl(bruto)}")
-            pdf.multi_cell(w,5,f"IPI (9.75%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}")
+            pdf.cell(0, 5, f"Metros totais: {m:.2f} m | Valor bruto: {_format_brl(bruto)}", ln=True)
+            pdf.cell(0, 5, f"IPI (9.75%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}", ln=True)
             if icms is not None:
-                pdf.multi_cell(w,5,f"ICMS (incluso): {icms}%")
+                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
             if st_valor:
-                pdf.multi_cell(w,5,f"ST aproximada: {st_valor}%")
+                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
             pdf.ln(3)
 
+    # -------------------------
     # Observações
+    # -------------------------
     if observacao:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "OBSERVAÇÕES", ln=True)
         pdf.set_font("Arial", size=8)
-        pdf.multi_cell(w, 5, str(observacao))
+        pdf.multi_cell(0, 5, str(observacao))
         pdf.ln(3)
 
+    # -------------------------
     # Vendedor
+    # -------------------------
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "VENDEDOR", ln=True)
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(w,5,f"Nome: {str(vendedor.get('nome',''))}")
-    pdf.multi_cell(w,5,f"Tel: {str(vendedor.get('tel',''))}")
-    pdf.multi_cell(w,5,f"E-mail: {str(vendedor.get('email',''))}")
+    pdf.cell(0, 5, f"Nome: {vendedor.get('nome','')}", ln=True)
+    pdf.cell(0, 5, f"Tel: {vendedor.get('tel','')}", ln=True)
+    pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
     pdf.ln(4)
 
-    # Gera BytesIO de forma segura
-    pdf_bytes = pdf.output(dest='S').encode('latin1', errors='replace')
+    # -------------------------
+    # Gera BytesIO direto
+    # -------------------------
     buffer = BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
