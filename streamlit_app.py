@@ -199,6 +199,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
     resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
     Observacao = st.session_state.get("Observacao","")
     pdf_buffer = gerar_pdf_fpdf(cliente, vendedor, st.session_state['itens_confeccionados'], st.session_state['bobinas_adicionadas'], resumo_conf, resumo_bob, Observacao, "", None, None)
+    
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
         data=pdf_buffer,
