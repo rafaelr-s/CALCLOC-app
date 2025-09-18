@@ -149,7 +149,7 @@ if tipo_produto == "Confeccionado":
         )
 
         st.markdown("---")
-        st.success("💰 **Resumo do Confeccionado**")
+        st.success("💰 **Resumo do Pedido - Confeccionado**")
         st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**". replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
@@ -221,7 +221,7 @@ if tipo_produto == "Bobina":
         )
 
         st.markdown("---")
-        st.success("💰 **Resumo das Bobinas**")
+        st.success("💰 **Resumo do Pedido - Bobinas**")
         st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
