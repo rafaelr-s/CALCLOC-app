@@ -18,7 +18,7 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
-    # === Adiciona a imagem do logo centralizado no topo ===
+    # Adiciona a imagem do logo centralizado no topo
     logo_path = "Capturar 12.PNG"
     page_width = 210
     x_position = (page_width - logo_width) / 2
