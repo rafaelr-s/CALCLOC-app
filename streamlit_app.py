@@ -1,6 +1,100 @@
-import streamlit as st
 from datetime import datetime
 import pytz
+import streamlit as st
+
+# imports necessários
+from fpdf import FPDF
+from io import BytesIO
+from datetime import datetime
+
+def _format_brl(v):
+    return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, aliquota_icms, aliquota_st):
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+    pdf.add_page()
+    pdf.set_auto_page_break(False)
+
+    # cabeçalho
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 8, "ORÇAMENTO DETALHADO", ln=True, align='C')
+    pdf.ln(2)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.ln(4)
+
+    # cliente
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 6, "CLIENTE", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}", ln=True)
+    pdf.cell(0, 5, f"CNPJ: {cliente.get('cnpj','')}", ln=True)
+    pdf.ln(3)
+
+    # vendedor
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 6, "VENDEDOR", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(0, 5, f"Nome: {vendedor.get('nome','')}", ln=True)
+    pdf.cell(0, 5, f"Tel: {vendedor.get('tel','')}", ln=True)
+    pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
+    pdf.ln(4)
+
+    # itens confeccionados
+    if itens_conf:
+        pdf.set_font("Arial", "B", 11)
+        pdf.cell(0, 6, "ITENS CONFECCIONADOS", ln=True)
+        pdf.set_font("Arial", size=8)
+        for item in itens_conf:
+            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
+            pdf.multi_cell(0, 5, txt)
+        if resumo_conf:
+            m2, bruto, ipi, final = resumo_conf
+            pdf.ln(1)
+            pdf.set_font("Arial", size=9)
+            pdf.cell(0, 5, f"Área total: {m2:.2f} m²  |  Valor bruto: {_format_brl(bruto)}", ln=True)
+            pdf.cell(0, 5, f"IPI (3.25%): {_format_brl(ipi)}  |  Total c/ IPI: {_format_brl(final)}", ln=True)
+            if aliquota_icms is not None:
+                pdf.cell(0, 5, f"ICMS (incluso): {aliquota_icms}%", ln=True)
+            if aliquota_st:
+                pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
+            pdf.ln(3)
+
+    # itens bobinas
+    if itens_bob:
+        pdf.set_font("Arial", "B", 11)
+        pdf.cell(0, 6, "ITENS BOBINAS", ln=True)
+        pdf.set_font("Arial", size=8)
+        for item in itens_bob:
+            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
+            if 'espessura' in item:
+                txt += f" | Esp: {item['espessura']}mm"
+            pdf.multi_cell(0, 5, txt)
+        if resumo_bob:
+            m, bruto, ipi, final = resumo_bob
+            pdf.ln(1)
+            pdf.set_font("Arial", size=9)
+            pdf.cell(0, 5, f"Metros totais: {m:.2f} m  |  Valor bruto: {_format_brl(bruto)}", ln=True)
+            pdf.cell(0, 5, f"IPI (9.75%): {_format_brl(ipi)}  |  Total c/ IPI: {_format_brl(final)}", ln=True)
+            if aliquota_icms is not None:
+                pdf.cell(0, 5, f"ICMS (incluso): {aliquota_icms}%", ln=True)
+            if aliquota_st:
+                pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
+            pdf.ln(3)
+
+    # observações
+    if observacao:
+        pdf.set_font("Arial", "B", 11)
+        pdf.cell(0, 6, "OBSERVAÇÕES", ln=True)
+        pdf.set_font("Arial", size=8)
+        pdf.multi_cell(0, 5, observacao)
+        pdf.ln(3)
+
+    # Gera bytes e retorna BytesIO
+    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    buffer = BytesIO(pdf_bytes)
+    buffer.seek(0)
+    return buffer
 
 # ============================
 # Inicialização de listas no session_state
@@ -28,10 +122,10 @@ for uf in todos_estados:
 
 # Percentuais de ST (última atualização geral Brasil)
 st_por_estado = {
-    "SP": 14, "RJ": 27, "MG": 22, "ES": 0, "PR": 22, "RS": 20, "SC": 0,
-    "BA": 29, "PE": 29, "CE": 19, "RN": 0, "PB": 29, "SE": 0, "AL": 29,
-    "DF": 29, "GO": 0, "MS": 0, "MT": 22,
-    "AM": 29, "PA": 26, "RO": 0, "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
+    "SP": 13.87, "RJ": 27.02, "MG": 22.26, "ES": 0.0, "PR": 22.26, "RS": 19.97, "SC": 0.0,
+    "BA": 29.21, "PE": 29.21, "CE": 19.02, "RN": 0.0, "PB": 29.21, "SE": 0.0, "AL": 29.21,
+    "DF": 29.21, "GO": 0.0, "MS": 0.0, "MT": 22.01,
+    "AM": 29.21, "PA": 26.79, "RO": 0.0, "RR": 26.79, "AC": 26.79, "AP": 29.21, "MA": 29.21, "PI": 22.51, "TO": 0.0
 }
 
 # ============================
@@ -99,7 +193,82 @@ st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso 
 aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado} próximo a: **{aliquota_st}%**")
+    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
+
+preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
+tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
+
+produto_exige_espessura = produto.startswith(prefixos_espessura)
+
+# ============================
+# Cliente
+# ============================
+st.markdown("---")
+st.subheader("👤 Dados do Cliente")
+col1, col2 = st.columns(2)
+with col1:
+    Cliente_nome = st.text_input("Razão ou Nome Fantasia")
+    Cliente_CNPJ = st.text_input("CNPJ (opcional)")
+
+# ============================
+# Vendedor (opcional)
+# ============================
+st.markdown("---")
+st.subheader("🗣️ Vendedor(a)")
+col1, col2 = st.columns(2)
+with col1:
+    vendedor_nome = st.text_input("Nome")
+    vendedor_tel = st.text_input("Telefone")
+with col2:
+    vendedor_email = st.text_input("E-mail")
+
+st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
+
+# ===================================
+# Botão para baixar PDF
+# ===================================
+if st.button("📄 Gerar Orçamento em PDF"):
+    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
+    resumo_bob  = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
+
+    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
+    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
+
+    # Certifique-se de que Observacao está definido antes de usar
+    Observacao = st.session_state.get("Observacao", "")
+
+    pdf_buffer = gerar_pdf_fpdf(cliente, vendedor,
+                               st.session_state['itens_confeccionados'],
+                               st.session_state['bobinas_adicionadas'],
+                               resumo_conf, resumo_bob,
+                               Observacao, estado, aliquota_icms, aliquota_st)
+
+    st.download_button(
+        label="⬇️ Baixar Orçamento em PDF",
+        data=pdf_buffer,
+        file_name="orcamento.pdf",
+        mime="application/pdf"
+    )
+
+# Data e hora
+brasilia_tz = pytz.timezone("America/Sao_Paulo")
+data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
+st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
+
+# Dados principais
+produto = st.selectbox("Nome do Produto:", options=produtos_lista)
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
+
+# ICMS automático
+aliquota_icms = icms_por_estado[estado]
+st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+# ST aparece só se Encerado + Revenda
+aliquota_st = None
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
 
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
@@ -149,15 +318,15 @@ if tipo_produto == "Confeccionado":
         )
 
         st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Confeccionado**")
+        st.success("💰 **Resumo do Confeccionado**")
         st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**". replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💰 Valor Final com IPI (3.25%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
         if aliquota_st:
             valor_com_st = valor_final * (1 + aliquota_st / 100)
-            st.error(f"💰 Valor Aproximado com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+            st.error(f"💰 Valor Final com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
        
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
@@ -221,19 +390,22 @@ if tipo_produto == "Bobina":
         )
 
         st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Bobinas**")
+        st.success("💰 **Resumo das Bobinas**")
         st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
         st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💰 Valor Final com IPI (9.75%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"💰 Valor Final: **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
             st.experimental_rerun()
-
 # ============================
 # Observações
 # ============================
+st.markdown("---")
+st.subheader("🔎 Observações")
+Observacao = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
+st.session_state["Observacao"] = Observacao
 st.markdown("---")
 st.subheader("🔎 Observações")
 Observacao = st.text_input("Insira aqui alguma observação sobre o orçamento (opcional)")
