@@ -94,13 +94,6 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
                 pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
             pdf.ln(3)
 
-    # Preço do produto
-    preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
-
-    # Resumos
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
-    resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-
     # -------------------------
     # Observações
     # -------------------------
