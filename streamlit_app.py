@@ -93,10 +93,9 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
     pdf.ln(4)
 
-    # Gera bytes e retorna BytesIO
-    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+# Gera bytes e retorna BytesIO
+    pdf_bytes = pdf.output(dest="S").encode("latin-1") if isinstance(pdf.output(dest="S"), str) else pdf.output(dest="S")
     buffer = BytesIO(pdf_bytes)
-    buffer.seek(0)
     return buffer
 
 
