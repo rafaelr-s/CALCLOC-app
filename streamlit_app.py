@@ -190,7 +190,7 @@ st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso 
 aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
 
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
@@ -379,30 +379,5 @@ if st.button("📄 Gerar Orçamento em PDF"):
         file_name="orcamento.pdf",
         mime="application/pdf"
     )
-
-# Data e hora
-brasilia_tz = pytz.timezone("America/Sao_Paulo")
-data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
-st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
-
-# Dados principais
-produto = st.selectbox("Nome do Produto:", options=produtos_lista)
-tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
-estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
-
-# ICMS automático
-aliquota_icms = icms_por_estado[estado]
-st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
-
-# ST aparece só se Encerado + Revenda
-aliquota_st = None
-if produto == "Encerado" and tipo_cliente == "Revenda":
-    aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado}: **{aliquota_st}%**")
-
-preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
-tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
-
-produto_exige_espessura = produto.startswith(prefixos_espessura)
 
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
