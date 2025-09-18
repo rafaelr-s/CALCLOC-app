@@ -180,7 +180,6 @@ st.title("Orçamento - Grupo Locomotiva")
 # ============================
 # Dados do Cliente e Botão PDF no topo
 # ============================
-st.title("Orçamento - Grupo Locomotiva")
 st.subheader("👤 Dados do Cliente")
 col1, col2 = st.columns(2)
 with col1:
@@ -364,36 +363,6 @@ with col1:
 with col2:
     vendedor_email = st.text_input("E-mail")
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
-
-# ============================
-# Botão para gerar PDF
-# ============================
-if st.button("📄 Gerar Orçamento em PDF"):
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
-    resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-    cliente = {"nome": st.session_state.get("Cliente_nome", ""), "cnpj": st.session_state.get("Cliente_CNPJ", "")}
-    vendedor = {
-        "nome": vendedor_nome,
-        "tel": vendedor_tel,
-        "email": vendedor_email
-    }
-    pdf_buffer = gerar_pdf_fpdf(
-        cliente, vendedor,
-        st.session_state['itens_confeccionados'],
-        st.session_state['bobinas_adicionadas'],
-        resumo_conf,
-        resumo_bob,
-        Observacao,
-        estado,
-        aliquota_icms,
-        aliquota_st
-    )
-    st.download_button(
-        label="⬇️ Baixar Orçamento em PDF",
-        data=pdf_buffer,
-        file_name="orcamento.pdf",
-        mime="application/pdf"
-    )
 
 
 
