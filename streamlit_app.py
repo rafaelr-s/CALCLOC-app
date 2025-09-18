@@ -20,10 +20,11 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
 
     # Adiciona a imagem do logo centralizado no topo
     logo_path = "Capturar 12.PNG"
-    page_width = 210
-    x_position = (page_width - logo_width) / 2
+    page_width = 210  # Largura da página A4
+    logo_width = 30  # Largura do logo (ajuste conforme necessário)
+    x_position = (page_width - logo_width) / 2  # Centraliza o logo horizontalmente
     pdf.image(logo_path, x=x_position, y=8, w=logo_width)
-    pdf.ln(40) 
+    pdf.ln(40)
 
     # Cabeçalho
     pdf.set_font("Arial", "B", 14)
@@ -55,10 +56,10 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
             pdf.set_font("Arial", size=9)
             pdf.cell(0, 5, f"Área total: {m2:.2f} m²  |  Valor bruto: {_format_brl(bruto)}", ln=True)
             pdf.cell(0, 5, f"IPI (3.25%): {_format_brl(ipi)}  |  Total c/ IPI: {_format_brl(final)}", ln=True)
-            if aliquota_icms is not None:
-                pdf.cell(0, 5, f"ICMS (incluso): {aliquota_icms}%", ln=True)
-            if aliquota_st:
-                pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
+            if icms is not None:
+                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
+            if st_valor:
+                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
             pdf.ln(3)
 
     # Itens bobinas
@@ -77,10 +78,10 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
             pdf.set_font("Arial", size=9)
             pdf.cell(0, 5, f"Metros totais: {m:.2f} m  |  Valor bruto: {_format_brl(bruto)}", ln=True)
             pdf.cell(0, 5, f"IPI (9.75%): {_format_brl(ipi)}  |  Total c/ IPI: {_format_brl(final)}", ln=True)
-            if aliquota_icms is not None:
-                pdf.cell(0, 5, f"ICMS (incluso): {aliquota_icms}%", ln=True)
-            if aliquota_st:
-                pdf.cell(0, 5, f"ST aproximada: {aliquota_st}%", ln=True)
+            if icms is not None:
+                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
+            if st_valor:
+                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
             pdf.ln(3)
 
     # Observações
@@ -100,11 +101,10 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
     pdf.ln(4)
 
-# Gera bytes e retorna BytesIO
+    # Gera bytes e retorna BytesIO
     pdf_bytes = pdf.output(dest="S").encode("latin-1") if isinstance(pdf.output(dest="S"), str) else pdf.output(dest="S")
     buffer = BytesIO(pdf_bytes)
     return buffer
-
 
 # ============================
 # Inicialização de listas no session_state
