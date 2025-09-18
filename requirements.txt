@@ -4,4 +4,3 @@ reportlab
 pytz
 datetime
 fpdf2
-BytesIO
