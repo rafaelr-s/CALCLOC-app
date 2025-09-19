@@ -265,11 +265,11 @@ if tipo_produto == "Confeccionado":
                 remover = st.button("❌", key=f"remover_conf_{idx}")
                 if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
-                    st.experimental_rerun()
+                    st.experimental_rerun("")
 
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
-        st.experimental_rerun()
+        st.experimental_rerun("")
 
     if st.session_state['itens_confeccionados']:
         m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
