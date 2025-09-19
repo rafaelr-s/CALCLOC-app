@@ -281,16 +281,18 @@ if tipo_produto == "Confeccionado":
         st.experimental_rerun()
 
     if st.session_state['itens_confeccionados']:
-        m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
-            st.session_state['itens_confeccionados'], preco_m2
-        )
-        st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Confeccionado**")
-        st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
-        st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI (3.25%): **{_format_brl(valor_final)}**")
-
+    m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
+        st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado
+    )
+    st.markdown("---")
+    st.success("💰 **Resumo do Pedido - Confeccionado**")
+    st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
+    st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
+    st.write(f"🧾 IPI (3,25%): **{_format_brl(valor_ipi)}**")
+    if valor_st > 0:
+        st.write(f"📌 ST ({aliquota_st}%): **{_format_brl(valor_st)}**")
+    st.write(f"💰 Valor Final com IPI{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
+    
 # ============================
 # Bobina
 # ============================
