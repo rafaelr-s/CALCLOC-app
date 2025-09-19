@@ -170,7 +170,6 @@ with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
 # Dados principais
-produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
 estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
