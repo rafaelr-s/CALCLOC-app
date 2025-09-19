@@ -169,12 +169,20 @@ with col1:
 with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
-# --- Estado ---
-estado = st.selectbox("Selecione o Estado do Cliente:", options=todos_estados)
+# Dados principais
+produto = st.selectbox("Nome do Produto:", options=produtos_lista)
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
 # ICMS automático
 aliquota_icms = icms_por_estado[estado]
 st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+# ST aparece só se Encerado + Revenda
+aliquota_st = None
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
 
 # ============================
 # Produtos
