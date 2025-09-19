@@ -157,12 +157,48 @@ data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
 st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
 # ============================
-# Configurações adicionais (placeholders)
+# Tabelas de ICMS e ST
 # ============================
-produtos_lista = ["Lona Leve", "Lona Sunset Galpão", "Encerado"]
-icms_por_estado = {"SP": 18, "RJ": 20, "MG": 12}
-st_por_estado = {"SP": 5, "RJ": 8, "MG": 7}
-prefixos_espessura = ("KP", "Lonil", "Sunset")
+icms_por_estado = {
+    "SP": 18, "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12
+}
+todos_estados = [
+    "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MT","MS",
+    "PA","PB","PE","PI","RN","RO","RR","SE","TO"
+]
+for uf in todos_estados:
+    if uf not in icms_por_estado:
+        icms_por_estado[uf] = 7
+
+st_por_estado = {
+    "SP": 14, "RJ": 27, "MG": 22, "ES": 0, "PR": 22, "RS": 20, "SC": 0,
+    "BA": 29, "PE": 29, "CE": 19, "RN": 0, "PB": 29, "SE": 0, "AL": 29,
+    "DF": 29, "GO": 0, "MS": 0, "MT": 22, "AM": 29, "PA": 26, "RO": 0,
+    "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
+}
+
+# ============================
+# Lista de Produtos
+# ============================
+produtos_lista = [
+    " ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
+    "Lonaleve","Sider Truck Teto","Sider Truck Lateral","Capota Marítima",
+    "Night&Day Plus 1,40","Night&Day Plus 2,00","Night&Day Listrado","Vitro 0,40",
+    "Vitro 0,50","Vitro 0,60","Vitro 0,80","Vitro 1,00","Durasol","Poli Light",
+    "Sunset","Tenda","Tenda 2,3x2,3","Acrylic","Agora","Lona Galpão Teto",
+    "Lona Galpão Lateral","Tela de Sombreamento 30%","Tela de Sombreamento 50%",
+    "Tela de Sombreamento 80%","Geomembrana RV 0,42","Geomembrana RV 0,80",
+    "Geomembrana RV 1,00","Geomembrana ATX 0,80","Geomembrana ATX 1,00",
+    "Geomembrana ATX 1,50","Geo Bio s/ reforço 1,00","Geo Bio s/ reforço 1,20",
+    "Geo Bio s/ reforço 1,50","Geo Bio c/ reforço 1,20","Cristal com Pó",
+    "Cristal com Papel","Cristal Colorido","Filme Liso","Filme Kamurcinha",
+    "Filme Verniz","Block Lux","Filme Dimension","Filme Sarja","Filme Emborrachado",
+    "Filme Pneumático","Adesivo Branco Brilho 0,08","Adesivo Branco Brilho 0,10",
+    "Adesivo Branco Fosco 0,10","Adesivo Preto Brilho 0,08","Adesivo Preto Fosco 0,10",
+    "Adesivo Transparente Brilho 0,08","Adesivo Transparente Jateado 0,08",
+    "Adesivo Mascara Brilho 0,08","Adesivo Aço Escovado 0,08"
+]
+prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
 
 # Dados principais
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
