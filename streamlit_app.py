@@ -18,29 +18,24 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
 
-    # -------------------------
     # Cabeçalho
-    # -------------------------
     pdf.cell(0, 10, "Orçamento - Grupo Locomotiva", ln=True, align="C")
     pdf.ln(10)
     pdf.set_font("Arial", size=9)
     pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
-    # -------------------------
     # Dados do Cliente
-    # -------------------------
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
-    if cliente.get("cnpj"):
-        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente['cnpj']}")
+    cnpj_cliente = str(cliente.get('cnpj','') or '')
+    if cnpj_cliente.strip():
+        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cnpj_cliente}")
     pdf.ln(3)
 
-    # -------------------------
     # Itens Confeccionados
-    # -------------------------
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS CONFECCIONADOS", ln=True)
@@ -61,9 +56,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
-    # -------------------------
     # Itens Bobinas
-    # -------------------------
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "ITENS BOBINAS", ln=True)
@@ -86,9 +79,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
-    # -------------------------
     # Observações
-    # -------------------------
     if observacao:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 6, "OBSERVAÇÕES", ln=True)
@@ -96,17 +87,13 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.multi_cell(0, 5, str(observacao))
         pdf.ln(3)
 
-    # -------------------------
     # Vendedor
-    # -------------------------
     if vendedor:
         pdf.set_font("Arial", "", 10)
         pdf.multi_cell(0, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
         pdf.ln(5)
 
-    # -------------------------
     # Retorno como BytesIO
-    # -------------------------
     buffer = BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
@@ -353,15 +340,23 @@ with col1:
 with col2:
     vendedor_email = st.text_input("E-mail")
 
-# ============================
 # Botão PDF
-# ============================
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
+    vendedor = {
+        "nome": st.session_state.get("vendedor_nome",""),
+        "tel": st.session_state.get("vendedor_tel",""),
+        "email": st.session_state.get("vendedor_email","")
+    }
     resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
     resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-    pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
+
+    pdf_buffer = gerar_pdf(cliente, vendedor,
+                           st.session_state['itens_confeccionados'],
+                           st.session_state['bobinas_adicionadas'],
+                           resumo_conf,
+                           resumo_bob,
+                           Observacao)
 
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
@@ -369,5 +364,5 @@ if st.button("📄 Gerar Orçamento em PDF"):
         file_name="orcamento.pdf",
         mime="application/pdf"
     )
-
+    
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
