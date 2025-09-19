@@ -27,9 +27,9 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
 
     # Dados do Cliente
     pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, "CLIENTE", ln=True)
+    pdf.cell(180, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
+    pdf.multi_cell(180, 5, f"Nome/Razão: {cliente.get('nome','')}")
     cnpj_cliente = str(cliente.get('cnpj','') or '').strip()
     if cnpj_cliente:
         if len(cnpj_cliente) == 11:  # CPF
@@ -38,17 +38,17 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             cnpj_formatado = f"{cnpj_cliente[:2]}.{cnpj_cliente[2:5]}.{cnpj_cliente[5:8]}/{cnpj_cliente[8:12]}-{cnpj_cliente[12:]}"
         else:
             cnpj_formatado = cnpj_cliente
-        pdf.cell(0, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
+        pdf.cell(180, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
     pdf.ln(3)
 
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(0, 6, "ITENS CONFECCIONADOS", ln=True)
+        pdf.cell(180, 6, "ITENS CONFECCIONADOS", ln=True)
         pdf.set_font("Arial", size=8)
         for item in itens_confeccionados:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(0, 5, txt)
+            pdf.multi_cell(180, 5, txt)
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final = resumo_conf
@@ -89,15 +89,15 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(0, 6, "OBSERVAÇÕES", ln=True)
+        pdf.cell(180, 6, "OBSERVAÇÕES", ln=True)
         pdf.set_font("Arial", size=8)
-        pdf.multi_cell(0, 5, str(observacao))
+        pdf.multi_cell(180, 5, str(observacao))
         pdf.ln(3)
 
     # Vendedor
     if vendedor:
         pdf.set_font("Arial", "", 10)
-        pdf.multi_cell(0, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
+        pdf.multi_cell(180, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
         pdf.ln(5)
 
     buffer = BytesIO()
