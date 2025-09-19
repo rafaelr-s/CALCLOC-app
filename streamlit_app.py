@@ -38,7 +38,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             cnpj_formatado = f"{cnpj_cliente[:2]}.{cnpj_cliente[2:5]}.{cnpj_cliente[5:8]}/{cnpj_cliente[8:12]}-{cnpj_cliente[12:]}"
         else:
             cnpj_formatado = cnpj_cliente
-     pdf.cell(0, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
+            pdf.cell(0, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
      pdf.ln(3)
 
     # Itens Confeccionados
