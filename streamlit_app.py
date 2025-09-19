@@ -170,27 +170,6 @@ with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
 # ============================
-# Seleção de Produto
-# ============================
-produto = st.selectbox("Nome do Produto:", options=produtos_lista)
-tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
-preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
-
-# Dados principais
-tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
-estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
-
-# ICMS automático
-aliquota_icms = icms_por_estado[estado]
-st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
-
-# ST aparece só se Encerado + Revenda
-aliquota_st = None
-if produto == "Encerado" and tipo_cliente == "Revenda":
-    aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
-
-# ============================
 # Produtos
 # ============================
 produtos_lista = [
@@ -214,6 +193,26 @@ produtos_lista = [
 
 prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
 
+# ============================
+# Seleção de Produto (MOVER PARA CIMA)
+# ============================
+produto = st.selectbox("Nome do Produto:", options=produtos_lista)
+tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
+preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
+
+# ============================
+# ICMS / ST automático
+# ============================
+# ICMS automático
+aliquota_icms = icms_por_estado[estado]
+st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+# ST aparece só se Encerado + Revenda
+aliquota_st = None
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
+    
 # ============================
 # Confeccionado
 # ============================
