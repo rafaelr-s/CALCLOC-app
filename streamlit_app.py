@@ -151,11 +151,6 @@ def calcular_valores_bobinas(itens, preco_m2):
     return m_total, valor_bruto, valor_ipi, valor_final
 
 # ============================
-# Lista de Produtos
-# ============================
-
-
-# ============================
 # Interface Streamlit
 # ============================
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
@@ -174,7 +169,16 @@ with col1:
 with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
-# --- Produtos ---
+# --- Estado ---
+estado = st.selectbox("Selecione o Estado do Cliente:", options=todos_estados)
+
+# ICMS automático
+aliquota_icms = icms_por_estado[estado]
+st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
+
+# ============================
+# Produtos
+# ============================
 produtos_lista = [
     " ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
     "Lonaleve","Sider Truck Teto","Sider Truck Lateral","Capota Marítima",
@@ -194,16 +198,6 @@ produtos_lista = [
     "Adesivo Mascara Brilho 0,08","Adesivo Aço Escovado 0,08"
 ]
 prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
-
-# ICMS automático
-aliquota_icms = icms_por_estado[estado]
-st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
-
-# ST aparece só se Encerado + Revenda
-aliquota_st = None
-if produto == "Encerado" and tipo_cliente == "Revenda":
-    aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
 
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
