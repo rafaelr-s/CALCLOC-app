@@ -151,12 +151,21 @@ st_por_estado = {
 # ============================
 # Funções de cálculo
 # ============================
-def calcular_valores_confeccionados(itens, preco_m2):
+def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado=""):
     m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
     valor_bruto = m2_total * preco_m2
     valor_ipi = valor_bruto * 0.0325
     valor_final = valor_bruto + valor_ipi
-    return m2_total, valor_bruto, valor_ipi, valor_final
+
+    # --- Cálculo ST ---
+    valor_st = 0
+    aliquota_st = 0
+    if any(item['produto'] == "Encerado" for item in itens) and tipo_cliente == "Revenda":
+        aliquota_st = st_por_estado.get(estado, 0)
+        valor_st = valor_final * aliquota_st / 100
+        valor_final += valor_st
+
+    return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
 def calcular_valores_bobinas(itens, preco_m2):
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
@@ -225,7 +234,7 @@ st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso 
 
 # ST aparece só se Encerado + Revenda
 aliquota_st = None
-if produto = "Encerado" and tipo_cliente = "Revenda":
+if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
     
