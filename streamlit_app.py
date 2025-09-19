@@ -205,8 +205,12 @@ produtos_lista = [
     "Adesivo Transparente Brilho 0,08","Adesivo Transparente Jateado 0,08",
     "Adesivo Mascara Brilho 0,08","Adesivo Aço Escovado 0,08"
 ]
+
 prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
 
+# ============================
+# Seleção de Produto
+# ============================
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
