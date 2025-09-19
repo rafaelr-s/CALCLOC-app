@@ -13,22 +13,19 @@ def _format_brl(v):
 # ============================
 # Função para gerar PDF
 # ============================
-def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo_bob, observacao, estado, icms, st_valor):
-    from fpdf import FPDF
-    from io import BytesIO
-    from datetime import datetime
+from fpdf import FPDF
 
+def gerar_pdf(itens_confeccionados, itens_bobinas, m2_total, valor_bruto, valor_ipi, valor_final, aliquota_st=None, vendedor=None, telefone=None, email=None):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", "B", 12)
 
     # -------------------------
     # Cabeçalho
     # -------------------------
     pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align='C')
-    pdf.ln(2)
+    pdf.cell(0, 10, "Orçamento - Grupo Locomotiva", ln=True, align="C")
+    pdf.ln(10)
     pdf.set_font("Arial", size=9)
     pdf.cell(0, 6, f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
@@ -57,17 +54,24 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
             txt = f"{item.get('quantidade',0)}x {item.get('produto','')} - {item.get('comprimento',0)}m x {item.get('largura',0)}m | Cor: {item.get('cor','')}"
             pdf.multi_cell(0, 5, txt)
 
-        if resumo_conf:
-            m2, bruto, ipi, final = resumo_conf
-            pdf.ln(1)
-            pdf.set_font("Arial", size=9)
-            pdf.cell(0, 5, f"Área total: {m2:.2f} m² | Valor bruto: {_format_brl(bruto)}", ln=True)
-            pdf.cell(0, 5, f"IPI (3.25%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}", ln=True)
-            if icms is not None:
-                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
-            if st_valor:
-                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
-            pdf.ln(3)
+        if itens_confeccionados:
+        pdf.set_font("Arial", "B", 11)
+        pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
+        pdf.set_font("Arial", "", 10)
+
+        for item in itens_confeccionados:
+            desc = f"{item['quantidade']}x {item['comprimento']:.2f}m x {item['largura']:.2f}m".replace(".", ",")
+            pdf.cell(0, 8, f"- {item['produto']} | {desc}", ln=True)
+
+        pdf.ln(3)
+        pdf.cell(0, 8, f"📏 Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
+        pdf.cell(0, 8, f"💵 Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+        pdf.cell(0, 8, f"🧾 IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+        pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+        if aliquota_st:
+            valor_com_st = valor_final * (1 + aliquota_st/100)
+            pdf.cell(0, 8, f"💰 Valor Aproximado com ST: {_format_brl(valor_com_st)}", ln=True)
+        pdf.ln(10)
 
     # -------------------------
     # Itens Bobinas
@@ -82,18 +86,24 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
                 txt += f" | Esp: {item.get('espessura',0)}mm"
             pdf.multi_cell(0, 5, txt)
 
-        if resumo_bob:
-            m, bruto, ipi, final = resumo_bob
-            pdf.ln(1)
-            pdf.set_font("Arial", size=9)
-            pdf.cell(0, 5, f"Metros totais: {m:.2f} m | Valor bruto: {_format_brl(bruto)}", ln=True)
-            pdf.cell(0, 5, f"IPI (9.75%): {_format_brl(ipi)} | Total c/ IPI: {_format_brl(final)}", ln=True)
-            if icms is not None:
-                pdf.cell(0, 5, f"ICMS (incluso): {icms}%", ln=True)
-            if st_valor:
-                pdf.cell(0, 5, f"ST aproximada: {st_valor}%", ln=True)
-            pdf.ln(3)
+        if itens_bobinas:
+        pdf.set_font("Arial", "B", 11)
+        pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
+        pdf.set_font("Arial", "", 10)
 
+        for item in itens_bobinas:
+            desc = f"{item['quantidade']}x {item['comprimento']:.2f}m | Largura: {item['largura']:.2f}m".replace(".", ",")
+            if "espessura" in item:
+                desc += f" | Esp: {str(f'{item['espessura']:.2f}'.replace('.', ','))}mm"
+            pdf.cell(0, 8, f"- {item['produto']} | {desc}", ln=True)
+            
+            pdf.ln(3)
+        pdf.cell(0, 8, f"📏 Total de Metros Lineares: {str(f'{m2_total:.2f}'.replace('.', ','))} m", ln=True)
+        pdf.cell(0, 8, f"💵 Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+        pdf.cell(0, 8, f"🧾 IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
+        pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+        pdf.ln(10)
+            
     # -------------------------
     # Observações
     # -------------------------
@@ -107,13 +117,10 @@ def gerar_pdf_fpdf(cliente, vendedor, itens_conf, itens_bob, resumo_conf, resumo
     # -------------------------
     # Vendedor
     # -------------------------
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, "VENDEDOR", ln=True)
-    pdf.set_font("Arial", size=9)
-    pdf.cell(0, 5, f"Nome: {vendedor.get('nome','')}", ln=True)
-    pdf.cell(0, 5, f"Tel: {vendedor.get('tel','')}", ln=True)
-    pdf.cell(0, 5, f"E-mail: {vendedor.get('email','')}", ln=True)
-    pdf.ln(4)
+ if vendedor:
+        pdf.set_font("Arial", "", 10)
+        pdf.multi_cell(0, 8, f"Vendedor: {vendedor}\nTelefone: {telefone}\nE-mail: {email}")
+        pdf.ln(5)
 
     
     # -------------------------
@@ -293,13 +300,13 @@ if tipo_produto == "Confeccionado":
     )
     st.markdown("---")
     st.success("💰 **Resumo do Pedido - Confeccionado**")
-    st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(",", "X").replace(".", ",").replace("X", "."))
-    st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-    st.write(f"🧾 IPI (3.25%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-    st.write(f"💰 Valor Final com IPI (3.25%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+    st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
+    st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
+    st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
+    st.write(f"💰 Valor Final com IPI (3.25%): **{_format_brl(valor_final)}**")
     if aliquota_st:
         valor_com_st = valor_final * (1 + aliquota_st / 100)
-        st.error(f"💰 Valor Aproximado com ST: **R$ {valor_com_st:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.error(f"💰 Valor Aproximado com ST: **{_format_brl(valor_com_st)}**")
 
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
@@ -358,15 +365,15 @@ if tipo_produto == "Bobina":
         )
         st.markdown("---")
         st.success("💰 **Resumo do Pedido - Bobinas**")
-        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💵 Valor Bruto: **R$ {valor_bruto:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"🧾 IPI (9.75%): **R$ {valor_ipi:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
-        st.write(f"💰 Valor Final com IPI (9.75%): **R$ {valor_final:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(".", ","))
+        st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
+        st.write(f"🧾 IPI (9.75%): **{_format_brl(valor_ipi)}**")
+        st.write(f"💰 Valor Final com IPI (9.75%): **{_format_brl(valor_final)}**")
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
             st.experimental_rerun()
-
+            
 # ============================
 # Observações
 # ============================
