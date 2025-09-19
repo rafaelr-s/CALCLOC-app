@@ -203,7 +203,7 @@ if tipo_produto == "Confeccionado":
     if st.session_state['itens_confeccionados']:
         st.subheader("📋 Itens Adicionados")
         for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):  # cópia da lista
-            col1, col2, col3, col4 = st.columns([3,2,2,1])
+            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
             with col1:
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m")
@@ -215,6 +215,8 @@ if tipo_produto == "Confeccionado":
                 if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
                     st.experimental_rerun()
+
+        st.markdown("---")
 
     m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
         st.session_state['itens_confeccionados'], preco_m2
