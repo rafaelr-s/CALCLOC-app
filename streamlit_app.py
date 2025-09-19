@@ -215,6 +215,21 @@ if tipo_produto == "Confeccionado":
                 if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
                     st.experimental_rerun()
+m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
+        st.session_state['itens_confeccionados'], preco_m2
+    )
+
+st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
+st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
+st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
+st.write(f"💰 Valor Final com IPI (3.25%): **{_format_brl(valor_final)}**")
+if aliquota_st:
+    valor_com_st = valor_final * (1 + aliquota_st / 100)
+    st.error(f"💰 Valor Aproximado com ST: **{_format_brl(valor_com_st)}**")
+
+    if st.button("🧹 Limpar Itens"):
+        st.session_state['itens_confeccionados'] = []
+        st.experimental_rerun()
 
 # ============================
 # Seção Bobina
@@ -263,6 +278,14 @@ if tipo_produto == "Bobina":
                 if remover:
                     st.session_state['bobinas_adicionadas'].pop(idx)
                     st.experimental_rerun()
+    st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(".", ","))
+    st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
+    st.write(f"🧾 IPI (9.75%): **{_format_brl(valor_ipi)}**")
+    st.write(f"💰 Valor Final com IPI (9.75%): **{_format_brl(valor_final)}**")  
+    
+    if st.button("🧹 Limpar Itens"):
+        st.session_state['itens_confeccionados'] = []
+        st.experimental_rerun()
 
 # ============================
 # Observações
