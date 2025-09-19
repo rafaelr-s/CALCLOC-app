@@ -225,7 +225,7 @@ st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso 
 
 # ST aparece só se Encerado + Revenda
 aliquota_st = None
-if produto == "Encerado" and tipo_cliente == "Revenda":
+if produto = "Encerado" and tipo_cliente = "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
     
