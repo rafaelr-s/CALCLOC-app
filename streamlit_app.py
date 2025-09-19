@@ -30,9 +30,16 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
-    cnpj_cliente = str(cliente.get('cnpj','') or '')
-    if cnpj_cliente.strip():
-        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cnpj_cliente}")
+    cnpj_cliente = str(cliente.get('cnpj','') or '').strip()
+    if cnpj_cliente:
+        # Formata CNPJ/CPF
+        if len(cnpj_cliente) == 11:  # CPF
+            cnpj_formatado = f"{cnpj_cliente[:3]}.{cnpj_cliente[3:6]}.{cnpj_cliente[6:9]}-{cnpj_cliente[9:]}"
+        elif len(cnpj_cliente) == 14:  # CNPJ
+            cnpj_formatado = f"{cnpj_cliente[:2]}.{cnpj_cliente[2:5]}.{cnpj_cliente[5:8]}/{cnpj_cliente[8:12]}-{cnpj_cliente[12:]}"
+        else:
+            cnpj_formatado = cnpj_cliente
+        pdf.cell(0, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
     pdf.ln(3)
 
     # Itens Confeccionados
@@ -130,7 +137,7 @@ def calcular_valores_bobinas(itens, preco_m2):
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
-# Dados do Cliente
+# --- Cliente ---
 st.subheader("👤 Dados do Cliente")
 col1, col2 = st.columns(2)
 with col1:
@@ -138,35 +145,14 @@ with col1:
 with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
-# Data e hora
+# --- Data ---
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
 st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
-# ============================
-# Tabelas de ICMS e ST
-# ============================
-icms_por_estado = {
-    "SP": 18, "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12
-}
-todos_estados = [
-    "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MT","MS",
-    "PA","PB","PE","PI","RN","RO","RR","SE","TO"
-]
-for uf in todos_estados:
-    if uf not in icms_por_estado:
-        icms_por_estado[uf] = 7
-
-st_por_estado = {
-    "SP": 14, "RJ": 27, "MG": 22, "ES": 0, "PR": 22, "RS": 20, "SC": 0,
-    "BA": 29, "PE": 29, "CE": 19, "RN": 0, "PB": 29, "SE": 0, "AL": 29,
-    "DF": 29, "GO": 0, "MS": 0, "MT": 22, "AM": 29, "PA": 26, "RO": 0,
-    "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
-}
-
-# ============================
-# Lista de Produtos
-# ============================
+# ---------------------------
+# Lista de produtos e opções
+# ---------------------------
 produtos_lista = [
     " ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
     "Lonaleve","Sider Truck Teto","Sider Truck Lateral","Capota Marítima",
@@ -187,27 +173,13 @@ produtos_lista = [
 ]
 prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
 
-# Dados principais
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
-tipo_cliente = st.selectbox("Tipo do Cliente:", [" ", "Consumidor Final", "Revenda"])
-estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
-
-# ICMS automático
-aliquota_icms = icms_por_estado[estado]
-st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
-
-# ST aparece só se Encerado + Revenda
-aliquota_st = None
-if produto == "Encerado" and tipo_cliente == "Revenda":
-    aliquota_st = st_por_estado.get(estado, 0)
-    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
-
-preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
+preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 produto_exige_espessura = produto.startswith(prefixos_espessura)
 
 # ============================
-# Produtos Confeccionados
+# Seção Confeccionado
 # ============================
 if tipo_produto == "Confeccionado":
     st.subheader("➕ Adicionar Item Confeccionado")
@@ -230,8 +202,8 @@ if tipo_produto == "Confeccionado":
 
     if st.session_state['itens_confeccionados']:
         st.subheader("📋 Itens Adicionados")
-        for idx, item in enumerate(st.session_state['itens_confeccionados']):
-            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+        for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):  # cópia da lista
+            col1, col2, col3, col4 = st.columns([3,2,2,1])
             with col1:
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m")
@@ -239,30 +211,13 @@ if tipo_produto == "Confeccionado":
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
                 st.session_state['itens_confeccionados'][idx]['cor'] = cor
             with col4:
-                if st.button("❌", key=f"remover_conf_{idx}"):
+                remover = st.button("❌", key=f"remover_conf_{idx}")
+                if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
                     st.experimental_rerun()
 
-        m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
-            st.session_state['itens_confeccionados'], preco_m2
-        )
-        st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Confeccionado**")
-        st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
-        st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI (3.25%): **{_format_brl(valor_final)}**")
-
-        if aliquota_st:
-            valor_com_st = valor_final * (1 + aliquota_st / 100)
-            st.error(f"💰 Valor Aproximado com ST: **{_format_brl(valor_com_st)}**")
-
-        if st.button("🧹 Limpar Itens"):
-            st.session_state['itens_confeccionados'] = []
-            st.experimental_rerun()
-
 # ============================
-# Produtos Bobina
+# Seção Bobina
 # ============================
 if tipo_produto == "Bobina":
     st.subheader("➕ Adicionar Bobina")
@@ -292,36 +247,22 @@ if tipo_produto == "Bobina":
 
     if st.session_state['bobinas_adicionadas']:
         st.subheader("📋 Bobinas Adicionadas")
-        for idx, item in enumerate(st.session_state['bobinas_adicionadas']):
-            col1, col2, col3, col4 = st.columns([4, 2, 2, 1])
+        for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):  # cópia da lista
+            col1, col2, col3, col4 = st.columns([4,2,2,1])
             with col1:
-                detalhes = (f"🔹 {item['quantidade']}x {item['comprimento']}m"
-                            f" | **Largura:** {item['largura']}m")
+                detalhes = (f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m")
                 if 'espessura' in item:
-                    detalhes += f" | **Esp:** {item['espessura']}mm"
+                    detalhes += f" | Esp: {item['espessura']}mm"
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(detalhes)
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_bob_{idx}")
                 st.session_state['bobinas_adicionadas'][idx]['cor'] = cor
             with col4:
-                if st.button("❌", key=f"remover_bob_{idx}"):
+                remover = st.button("❌", key=f"remover_bob_{idx}")
+                if remover:
                     st.session_state['bobinas_adicionadas'].pop(idx)
                     st.experimental_rerun()
-
-        m_total, valor_bruto, valor_ipi, valor_final = calcular_valores_bobinas(
-            st.session_state['bobinas_adicionadas'], preco_m2
-        )
-        st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Bobinas**")
-        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(".", ","))
-        st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (9.75%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI (9.75%): **{_format_brl(valor_final)}**")
-
-        if st.button("🧹 Limpar Bobinas"):
-            st.session_state['bobinas_adicionadas'] = []
-            st.experimental_rerun()
 
 # ============================
 # Observações
@@ -340,14 +281,12 @@ with col1:
 with col2:
     vendedor_email = st.text_input("E-mail")
 
-# Botão PDF
+# ============================
+# Botão Gerar PDF
+# ============================
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {
-        "nome": st.session_state.get("vendedor_nome",""),
-        "tel": st.session_state.get("vendedor_tel",""),
-        "email": st.session_state.get("vendedor_email","")
-    }
+    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
     resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
     resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
 
@@ -364,5 +303,5 @@ if st.button("📄 Gerar Orçamento em PDF"):
         file_name="orcamento.pdf",
         mime="application/pdf"
     )
-    
+
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
