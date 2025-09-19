@@ -56,10 +56,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"📏 Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
-            pdf.cell(0, 8, f"💵 Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(0, 8, f"🧾 IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
-            pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
+            pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+            pdf.cell(0, 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
     # Itens Bobinas
@@ -79,10 +79,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"📏 Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
-            pdf.cell(0, 8, f"💵 Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(0, 8, f"🧾 IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
-            pdf.cell(0, 8, f"💰 Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
+            pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
+            pdf.cell(0, 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
     # Observações
