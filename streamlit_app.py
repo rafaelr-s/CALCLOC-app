@@ -361,7 +361,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
     resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
     resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
-    pdf_buffer = gerar_pdf(cliente, vendedor, st.session_state['itens_confeccionados'], st.session_state['bobinas_adicionadas'], resumo_conf, resumo_bob, Observacao)
+    pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
 
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
