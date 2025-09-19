@@ -51,7 +51,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", size=8)
         for item in itens_confeccionados:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(largura_disponivel, 5, txt, align='C')
+            pdf.multi_cell(largura_disponivel, 5, txt)
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final = resumo_conf
@@ -86,7 +86,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
-            pdf.multi_cell(largura_disponivel, 5, txt, align='C')
+            pdf.multi_cell(largura_disponivel, 5, txt)
 
         if resumo_bob:
             m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
@@ -105,13 +105,13 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", "B", 9)
         pdf.cell(largura_disponivel, 6, "OBSERVAÇÕES", ln=True)
         pdf.set_font("Arial", size=8)
-        pdf.multi_cell(largura_disponivel, 5, str(observacao), align='C')
+        pdf.multi_cell(largura_disponivel, 5, str(observacao))
         pdf.ln(3)
 
     # Vendedor
     if vendedor:
         pdf.set_font("Arial", "", 10)
-        pdf.multi_cell(largura_disponivel, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}", align='C')
+        pdf.multi_cell(largura_disponivel, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
         pdf.ln(5)
 
     buffer = BytesIO()
