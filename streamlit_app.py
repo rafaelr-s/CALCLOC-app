@@ -34,7 +34,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
-        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
+        pdf.multi_cell(200, 5, f"CNPJ/CPF: {Cliente_CNPJ}")
     pdf.ln(1)
         
     # Itens Confeccionados
