@@ -109,9 +109,9 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.output(buffer)
     buffer.seek(0)
     return buffer
-    
+
 # ============================
-# Inicialização de listas
+# Inicialização de listas (chaves padronizadas)
 # ============================
 if "itens_confeccionados" not in st.session_state:
     st.session_state["itens_confeccionados"] = []
@@ -140,25 +140,39 @@ st_por_estado = {
 }
 
 # ============================
-# Funções de cálculo
+# Função utilitária segura para rerun (evita AttributeError em alguns ambientes)
+# ============================
+def _try_rerun():
+    try:
+        if hasattr(st, "experimental_rerun"):
+            st.experimental_rerun()
+    except Exception:
+        # se ocorrer qualquer problema ao rerun, apenas segue em frente (evita crash)
+        pass
+
+# ============================
+# Funções de cálculo (únicas definições, sem duplicidades)
 # ============================
 def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado=""):
+    """Calcula m², IPI (3.25%) e aplica ST sobre valor_final (IPI incluso) somente
+       se existir item 'Encerado' e tipo_cliente == 'Revenda'"""
     m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
     valor_bruto = m2_total * preco_m2
     valor_ipi = valor_bruto * 0.0325
     valor_final = valor_bruto + valor_ipi
 
-    # --- Cálculo ST ---
+    # ST (aplicado sobre valor_final) — somente para Encerado + Revenda
     valor_st = 0
     aliquota_st = 0
-    if any(item['produto'] == "Encerado" for item in itens) and tipo_cliente == "Revenda":
+    if any(item.get('produto') == "Encerado" for item in itens) and tipo_cliente == "Revenda":
         aliquota_st = st_por_estado.get(estado, 0)
-        valor_st = valor_final * aliquota_st / 100
+        valor_st = valor_final * aliquota_st / 100  # <-- aqui multiplicamos pelo valor_final
         valor_final += valor_st
 
     return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
 def calcular_valores_bobinas(itens, preco_m2):
+    """Bobinas: sem ST. IPI 9.75% aplicado sobre o bruto (m * preço)."""
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
     valor_bruto = m_total * preco_m2
     valor_ipi = valor_bruto * 0.0975
@@ -220,39 +234,14 @@ tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revend
 estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
 # ICMS automático
-aliquota_icms = icms_por_estado[estado]
+aliquota_icms = icms_por_estado.get(estado, 7)
 st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
 
-# ============================
-# Função de cálculo Confeccionado
-# ============================
-def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente, estado, tipo_produto):
-    m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
-    valor_bruto = m2_total * preco_m2
-    valor_ipi = valor_bruto * 0.0325
-    valor_final = valor_bruto + valor_ipi
-
-    valor_st, aliquota_st = 0, 0
-    # ST apenas para Confeccionado + Encerado + Revenda
-    if tipo_produto == "Encerado" and tipo_cliente == "Revenda":
-        aliquota_st = st_por_estado.get(estado, 0)  # usa sua tabela de ST
-        valor_st = valor_bruto * (aliquota_st / 100)
-        valor_final += valor_st
-
-    return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
-
-
-# ============================
-# Função de cálculo Bobinas (sem ST)
-# ============================
-def calcular_valores_bobinas(itens, preco_m2, tipo_cliente):
-    metragem_total = sum(item['metragem'] * item['quantidade'] for item in itens)
-    valor_bruto = metragem_total * preco_m2
-    valor_ipi = valor_bruto * 0.0325
-    valor_final = valor_bruto + valor_ipi
-    return metragem_total, valor_bruto, valor_ipi, valor_final
-
-
+# ST aparece só se Encerado + Revenda (aviso)
+if produto == "Encerado" and tipo_cliente == "Revenda":
+    aliquota_st = st_por_estado.get(estado, 0)
+    st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
+    
 # ============================
 # Confeccionado
 # ============================
@@ -289,16 +278,16 @@ if tipo_produto == "Confeccionado":
                 remover = st.button("❌", key=f"remover_conf_{idx}")
                 if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
-                    st.experimental_rerun()
+                    _try_rerun()
 
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
-        st.experimental_rerun()
+        _try_rerun()
 
     # --- Só calcula e mostra resumo se tiver itens ---
     if st.session_state['itens_confeccionados']:
         m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
-            st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado, tipo_produto
+            st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado
         )
 
         st.markdown("---")
@@ -315,56 +304,65 @@ if tipo_produto == "Confeccionado":
 # ============================
 if tipo_produto == "Bobina":
     st.subheader("➕ Adicionar Item Bobina")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        metragem = st.number_input("Metragem (m):", min_value=0.01, value=1.0, step=0.1, key="metragem_bob")
+        comprimento_bob = st.number_input("Comprimento (m):", min_value=0.01, value=50.0, step=0.1, key="comp_bob")
     with col2:
-        quantidade = st.number_input("Quantidade:", min_value=1, value=1, step=1, key="qtd_bob")
+        largura_bobina = st.number_input("Largura da Bobina (m):", min_value=0.01, value=1.4, step=0.01, key="larg_bob")
+    with col3:
+        quantidade_bob = st.number_input("Quantidade:", min_value=0, value=0, step=1, key="qtd_bob")
+
+    espessura_bobina = None
+    if produto.startswith(prefixos_espessura):
+        espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.01, value=0.10, step=0.01, key="esp_bob")
 
     if st.button("➕ Adicionar Bobina"):
-        st.session_state['itens_bobinas'].append({
+        item_bobina = {
             'produto': produto,
-            'metragem': metragem,
-            'quantidade': quantidade,
+            'comprimento': comprimento_bob,
+            'largura': largura_bobina,
+            'quantidade': quantidade_bob,
             'cor': ""
-        })
+        }
+        if espessura_bobina:
+            item_bobina['espessura'] = espessura_bobina
+        st.session_state['bobinas_adicionadas'].append(item_bobina)
 
-    if st.session_state['itens_bobinas']:
-        st.subheader("📋 Itens Adicionados")
-        for idx, item in enumerate(st.session_state['itens_bobinas'][:]):
-            col1, col2, col3 = st.columns([3,2,1])
+    if st.session_state['bobinas_adicionadas']:
+        st.subheader("📋 Bobinas Adicionadas")
+        for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):
+            col1, col2, col3, col4 = st.columns([4,2,1,1])
             with col1:
+                detalhes = f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m"
+                if 'espessura' in item:
+                    detalhes += f" | Esp: {item['espessura']}mm"
                 st.markdown(f"**{item['produto']}**")
-                st.markdown(f"🔹 {item['quantidade']}x {item['metragem']}m")
+                st.markdown(detalhes)
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_bob_{idx}")
-                st.session_state['itens_bobinas'][idx]['cor'] = cor
-            with col3:
+                st.session_state['bobinas_adicionadas'][idx]['cor'] = cor
+            with col4:
                 remover = st.button("❌", key=f"remover_bob_{idx}")
                 if remover:
-                    st.session_state['itens_bobinas'].pop(idx)
-                    st.experimental_rerun()
+                    st.session_state['bobinas_adicionadas'].pop(idx)
+                    _try_rerun()
 
-    if st.button("🧹 Limpar Itens"):
-        st.session_state['itens_bobinas'] = []
-        st.experimental_rerun()
+    if st.button("🧹 Limpar Bobinas"):
+        st.session_state['bobinas_adicionadas'] = []
+        _try_rerun()
 
     # --- Resumo (sem ST para bobina) ---
-    if st.session_state['itens_bobinas']:
-        metragem_total, valor_bruto, valor_ipi, valor_final = calcular_valores_bobinas(
-            st.session_state['itens_bobinas'], preco_m2, tipo_cliente
+    if st.session_state['bobinas_adicionadas']:
+        m_total, valor_bruto, valor_ipi, valor_final = calcular_valores_bobinas(
+            st.session_state['bobinas_adicionadas'], preco_m2
         )
 
         st.markdown("---")
-        st.success("💰 **Resumo do Pedido - Bobina**")
-        st.write(f"📏 Metragem Total: **{metragem_total:.2f} m**".replace(".", ","))
+        st.success("💰 **Resumo do Pedido - Bobinas**")
+        st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(".", ","))
         st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (3,25%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI: **{_format_brl(valor_final)}**")
-        
-        if st.button("🧹 Limpar Bobinas"):
-            st.session_state['bobinas_adicionadas'] = []
-            st.experimental_rerun()
+        st.write(f"🧾 IPI (9,75%): **{_format_brl(valor_ipi)}**")
+        st.write(f"💰 Valor Final com IPI (9,75%): **{_format_brl(valor_final)}**")
 
 # ============================
 # Observações
@@ -389,7 +387,7 @@ with col2:
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2) if st.session_state['itens_confeccionados'] else None
+    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado) if st.session_state['itens_confeccionados'] else None
     resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
 
     pdf_buffer = gerar_pdf(cliente, vendedor,
@@ -397,7 +395,9 @@ if st.button("📄 Gerar Orçamento em PDF"):
                            st.session_state['bobinas_adicionadas'],
                            resumo_conf,
                            resumo_bob,
-                           Observacao)
+                           Observacao,
+                           tipo_cliente,
+                           estado)
 
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
