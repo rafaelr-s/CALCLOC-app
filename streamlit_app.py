@@ -297,7 +297,7 @@ if tipo_produto == "Confeccionado":
         st.write(f"🧾 IPI (3,25%): **{_format_brl(valor_ipi)}**")
         if valor_st > 0:
             st.write(f"📌 ST ({aliquota_st}%): **{_format_brl(valor_st)}**")
-        st.write(f"💰 Valor Final Aproximado com IPI e ST{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
+        st.write(f"💰 Valor Final Aproximado com IPI{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
 
 # ============================
 # Bobina
