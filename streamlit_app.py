@@ -50,7 +50,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", size=8)
         for item in itens_confeccionados:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(200, 5, txt)
+            pdf.multi_cell(0, 5, txt)
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
