@@ -32,8 +32,6 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(200, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")
-    
-    # CNPJ/CPF sempre exibido
     pdf.set_font("Arial", "B", 11)
     pdf.cell(200, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
