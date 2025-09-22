@@ -81,7 +81,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
                 )
             if "espessura" in item:
-            txt += f" | Esp: {item['espessura']}mm"
+                txt += f" | Esp: {item['espessura']}mm"
             pdf.multi_cell(200, 5, txt)
             pdf.ln(1)
 
@@ -273,24 +273,24 @@ if tipo_produto == "Confeccionado":
 
     if st.session_state['itens_confeccionados']:
         st.subheader("📋 Itens Adicionados")
-        for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):
-            col1, col2, col3, col4 = st.columns([3,2,2,1])
-    with col1:
-        area_item = item['comprimento'] * item['largura'] * item['quantidade']
-        valor_item = area_item * preco_m2
-        st.markdown(f"**{item['produto']}**")
-        st.markdown(
-            f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
-            f"= {area_item:.2f} m² → 💵 {_format_brl(valor_item)}"
-        )
-            with col2:
-                cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
-                st.session_state['itens_confeccionados'][idx]['cor'] = cor
-            with col4:
-                remover = st.button("❌", key=f"remover_conf_{idx}")
-                if remover:
-                    st.session_state['itens_confeccionados'].pop(idx)
-                    _try_rerun()
+    for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):
+        col1, col2, col3, col4 = st.columns([3,2,2,1])
+        with col1:
+            area_item = item['comprimento'] * item['largura'] * item['quantidade']
+            valor_item = area_item * preco_m2
+            st.markdown(f"**{item['produto']}**")
+            st.markdown(
+                f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
+                f"= {area_item:.2f} m² → 💵 {_format_brl(valor_item)}"
+            )
+        with col2:
+            cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
+            st.session_state['itens_confeccionados'][idx]['cor'] = cor
+        with col4:
+            remover = st.button("❌", key=f"remover_conf_{idx}")
+            if remover:
+                st.session_state['itens_confeccionados'].pop(idx)
+                _try_rerun()
 
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
@@ -343,18 +343,18 @@ if tipo_produto == "Bobina":
     if st.session_state['bobinas_adicionadas']:
         st.subheader("📋 Bobinas Adicionadas")
         for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):
-    col1, col2, col3, col4 = st.columns([4,2,2,1])
-    with col1:
-        metros_item = item['comprimento'] * item['quantidade']
-        valor_item = metros_item * preco_m2
-        detalhes = (
-            f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
-            f"= {metros_item:.2f} m → 💵 {_format_brl(valor_item)}"
-        )
-        if 'espessura' in item:
-            detalhes += f" | Esp: {item['espessura']}mm"
-        st.markdown(f"**{item['produto']}**")
-        st.markdown(detalhes)
+            col1, col2, col3, col4 = st.columns([4,2,2,1])
+            with col1:
+                metros_item = item['comprimento'] * item['quantidade']
+                valor_item = metros_item * preco_m2
+                detalhes = (
+                    f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
+                    f"= {metros_item:.2f} m → 💵 {_format_brl(valor_item)}"
+                )
+                if 'espessura' in item:
+                    detalhes += f" | Esp: {item['espessura']}mm"
+                st.markdown(f"**{item['produto']}**")
+                st.markdown(detalhes)
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_bob_{idx}")
                 st.session_state['bobinas_adicionadas'][idx]['cor'] = cor
