@@ -281,7 +281,7 @@ if tipo_produto == "Confeccionado":
             st.markdown(f"**{item['produto']}**")
             st.markdown(
                 f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
-                f"= {area_item:.2f} m² → 💵 {_format_brl(valor_item)}"
+                f"= {area_item:.2f} m² → {_format_brl(valor_item)}"
             )
         with col2:
             cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
@@ -349,7 +349,7 @@ if tipo_produto == "Bobina":
                 valor_item = metros_item * preco_m2
                 detalhes = (
                     f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
-                    f"= {metros_item:.2f} m → 💵 {_format_brl(valor_item)}"
+                    f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
                 )
                 if 'espessura' in item:
                     detalhes += f" | Esp: {item['espessura']}mm"
