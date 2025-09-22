@@ -44,9 +44,14 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.cell(200, 6, "Itens Confeccionados", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
-            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
+            area_item = item['comprimento'] * item['largura'] * item['quantidade']
+            valor_item = area_item * preco_m2
+            txt = (
+                f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m "
+                f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
+                )
             pdf.multi_cell(200, 5, txt)
-            pdf.ln(1)  # força espaçamento entre itens
+            pdf.ln(1)
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
@@ -69,9 +74,14 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.cell(200, 6, "Itens Bobina", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
-            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
+            metros_item = item['comprimento'] * item['quantidade']
+            valor_item = metros_item * preco_m2
+            txt = (
+                f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m "
+                f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
+                )
             if "espessura" in item:
-                txt += f" | Esp: {item['espessura']}mm"
+            txt += f" | Esp: {item['espessura']}mm"
             pdf.multi_cell(200, 5, txt)
             pdf.ln(1)
 
@@ -265,9 +275,14 @@ if tipo_produto == "Confeccionado":
         st.subheader("📋 Itens Adicionados")
         for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):
             col1, col2, col3, col4 = st.columns([3,2,2,1])
-            with col1:
-                st.markdown(f"**{item['produto']}**")
-                st.markdown(f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m")
+    with col1:
+        area_item = item['comprimento'] * item['largura'] * item['quantidade']
+        valor_item = area_item * preco_m2
+        st.markdown(f"**{item['produto']}**")
+        st.markdown(
+            f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
+            f"= {area_item:.2f} m² → 💵 {_format_brl(valor_item)}"
+        )
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
                 st.session_state['itens_confeccionados'][idx]['cor'] = cor
@@ -328,13 +343,18 @@ if tipo_produto == "Bobina":
     if st.session_state['bobinas_adicionadas']:
         st.subheader("📋 Bobinas Adicionadas")
         for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):
-            col1, col2, col3, col4 = st.columns([4,2,1,1])
-            with col1:
-                detalhes = f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m"
-                if 'espessura' in item:
-                    detalhes += f" | Esp: {item['espessura']}mm"
-                st.markdown(f"**{item['produto']}**")
-                st.markdown(detalhes)
+    col1, col2, col3, col4 = st.columns([4,2,2,1])
+    with col1:
+        metros_item = item['comprimento'] * item['quantidade']
+        valor_item = metros_item * preco_m2
+        detalhes = (
+            f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
+            f"= {metros_item:.2f} m → 💵 {_format_brl(valor_item)}"
+        )
+        if 'espessura' in item:
+            detalhes += f" | Esp: {item['espessura']}mm"
+        st.markdown(f"**{item['produto']}**")
+        st.markdown(detalhes)
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_bob_{idx}")
                 st.session_state['bobinas_adicionadas'][idx]['cor'] = cor
