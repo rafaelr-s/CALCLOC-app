@@ -34,15 +34,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")
     
     # CNPJ/CPF sempre exibido
-    cnpj_cliente = str(cliente.get('cnpj','')).strip()
-    cnpj_formatado = cnpj_cliente
-    if cnpj_cliente:
-        if len(cnpj_cliente) == 11:  # CPF
-            cnpj_formatado = f"{cnpj_cliente[:3]}.{cnpj_cliente[3:6]}.{cnpj_cliente[6:9]}-{cnpj_cliente[9:]}"
-        elif len(cnpj_cliente) == 14:  # CNPJ
-            cnpj_formatado = f"{cnpj_cliente[:2]}.{cnpj_cliente[2:5]}.{cnpj_cliente[5:8]}/{cnpj_cliente[8:12]}-{cnpj_cliente[12:]}"
-    pdf.cell(200, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
-    pdf.ln(3)
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(200, 6, "CLIENTE", ln=True)
+    pdf.set_font("Arial", size=9)
+    pdf.multi_cell(200, 5, f"CNPJ ou CPF (Opcional): {cliente.get('CNPJ ou CPF','')}")
 
     # Itens Confeccionados
     if itens_confeccionados:
