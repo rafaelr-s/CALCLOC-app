@@ -13,7 +13,7 @@ def _format_brl(v):
 # ============================
 # Função para gerar PDF
 # ============================
-def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, tipo_cliente="", estado=""):
+def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, preco_m2, tipo_cliente="", estado=""):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -32,11 +32,18 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(200, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
-   # Mostra CNPJ ou CPF somente se informado
+
+    # Mostra CNPJ ou CPF somente se informado
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
         pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
-    pdf.ln(1)
+    
+    # Tipo e Estado
+    if tipo_cliente:
+        pdf.multi_cell(200, 5, f"Tipo do Cliente: {tipo_cliente}")
+    if estado:
+        pdf.multi_cell(200, 5, f"Estado: {estado}")
+    pdf.ln(2)
         
     # Itens Confeccionados
     if itens_confeccionados:
@@ -59,6 +66,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, "Resumo - Confeccionados", ln=True)
             pdf.set_font("Arial", "", 10)
+            pdf.cell(200, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
             pdf.cell(200, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
             pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
             pdf.cell(200, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
@@ -91,6 +99,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
+            pdf.cell(200, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
             pdf.cell(200, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
             pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
             pdf.cell(200, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
