@@ -86,6 +86,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     
     page_height = 297
     margin = 10
+    usable_width = 210 - 2 * margin  # largura A4 menos margens
     current_height = margin
 
     def add_line(h):
@@ -111,19 +112,19 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 5, "Cliente", ln=True)
     add_line(5)
     pdf.set_font("Arial", "", 8)
-    pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
+    pdf.multi_cell(usable_width, 5, f"Nome/Razão: {cliente.get('nome','')}")
     add_line(5)
     if cliente.get('cnpj','').strip():
-        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
+        pdf.multi_cell(usable_width, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
         add_line(5)
     if tipo_cliente.strip():
-        pdf.multi_cell(0, 5, f"Tipo de Cliente: {tipo_cliente}")
+        pdf.multi_cell(usable_width, 5, f"Tipo de Cliente: {tipo_cliente}")
         add_line(5)
     if estado.strip():
-        pdf.multi_cell(0, 5, f"Estado: {estado}")
+        pdf.multi_cell(usable_width, 5, f"Estado: {estado}")
         add_line(5)
     pdf.ln(1)
-    
+
     # Ajusta tamanho da fonte conforme quantidade de itens
     total_itens = len(itens_confeccionados) + len(itens_bobinas)
     font_size = 10
@@ -140,7 +141,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", "", font_size-1)
         for item in itens_confeccionados:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(0, 4, txt)
+            pdf.multi_cell(usable_width, 4, txt)
             add_line(4)
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
@@ -175,7 +176,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
-            pdf.multi_cell(0, 4, txt)
+            pdf.multi_cell(usable_width, 4, txt)
             add_line(4)
         if resumo_bob:
             m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
@@ -203,15 +204,15 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.cell(0, 5, "OBSERVAÇÕES", ln=True)
         add_line(5)
         pdf.set_font("Arial", "", font_size-1)
-        pdf.multi_cell(0, 4, str(observacao))
-        add_line(4*len(observacao.split("\n")))
+        pdf.multi_cell(usable_width, 4, str(observacao))
+        add_line(4*len(str(observacao).split("\n")))
         pdf.ln(1)
         add_line(2)
 
     # Vendedor
     if vendedor:
         pdf.set_font("Arial", "", font_size-1)
-        pdf.multi_cell(0, 4, f"Vendedor: {vendedor.get('nome','')} | Telefone: {vendedor.get('tel','')} | E-mail: {vendedor.get('email','')}")
+        pdf.multi_cell(usable_width, 4, f"Vendedor: {vendedor.get('nome','')} | Telefone: {vendedor.get('tel','')} | E-mail: {vendedor.get('email','')}")
         add_line(4)
         pdf.ln(1)
         add_line(2)
@@ -220,7 +221,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.output(buffer)
     buffer.seek(0)
     return buffer
-
+    
 # ============================
 # Inicialização de itens Confeccionados e Bobinas
 # ============================
