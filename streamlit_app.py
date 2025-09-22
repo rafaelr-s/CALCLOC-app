@@ -32,15 +32,16 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(200, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
+   # Mostra CNPJ ou CPF somente se informado
     cnpj_cpf = cliente.get("cnpj", "").strip()
-        if cnpj_cpf:
-    pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
+    if cnpj_cpf:
+        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
     pdf.ln(1)
         
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "Itens Confeccionados", ln=True)
+        pdf.cell(200, 6, "ITENS CONFECCIONADOS", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
@@ -60,12 +61,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 pdf.cell(200, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(5)
+            pdf.ln(10)
 
     # Itens Bobinas
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "Itens Bobinas", ln=True)
+        pdf.cell(200, 6, "ITENS BOBINAS", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
@@ -85,15 +86,15 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(200, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(5)
+            pdf.ln(10)
 
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 11, "Observações", ln=True)
-        pdf.set_font("Arial", size=9)
-        pdf.multi_cell(200, 9, str(observacao))
-        pdf.ln(1)
+        pdf.cell(200, 11, "OBSERVAÇÕES", ln=True)
+        pdf.set_font("Arial", size=11)
+        pdf.multi_cell(200, 11, str(observacao))
+        pdf.ln(4)
 
     # Vendedor
     if vendedor:
@@ -293,7 +294,7 @@ if tipo_produto == "Confeccionado":
         st.write(f"🧾 IPI (3,25%): **{_format_brl(valor_ipi)}**")
         if valor_st > 0:
             st.write(f"📌 ST ({aliquota_st}%): **{_format_brl(valor_st)}**")
-        st.write(f"💰 Valor Final com IPI{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
+        st.write(f"💰 Valor Final Aproximado com IPI{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
 
 # ============================
 # Bobina
