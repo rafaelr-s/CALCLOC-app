@@ -5,118 +5,13 @@ from fpdf import FPDF
 from io import BytesIO
 
 # ============================
-# Função para formatar valores em R$
+# Função de formatação R$
 # ============================
 def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # ============================
-# Função para gerar PDF
-# ============================
-def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, tipo_cliente="", estado=""):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", "B", 14)
-
-    # Cabeçalho
-    pdf.cell(0, 12, "Orçamento - Grupo Locomotiva", ln=True, align="C")
-    pdf.ln(10)
-    pdf.set_font("Arial", size=9)
-    brasilia_tz = pytz.timezone("America/Sao_Paulo")
-    pdf.cell(0, 6, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
-    pdf.ln(4)
-
-    # Dados do Cliente
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(200, 6, "Cliente", ln=True)
-    pdf.set_font("Arial", size=9)
-    pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
-   # Mostra CNPJ ou CPF somente se informado
-    cnpj_cpf = cliente.get("cnpj", "").strip()
-    if cliente_cnpj:
-        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cliente.get('cliente_cnpj','')}")
-    pdf.ln(1)
-        
-    # Itens Confeccionados
-    if itens_confeccionados:
-        pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS CONFECCIONADOS", ln=True)
-        pdf.set_font("Arial", size=8)
-        for item in list(itens_confeccionados):
-            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
-            pdf.multi_cell(200, 5, txt)
-            pdf.ln(1)  # força espaçamento entre itens
-
-        if resumo_conf:
-            m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
-            pdf.ln(3)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, "Resumo - Confeccionados", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.cell(200, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
-            pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(200, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
-            if valor_st > 0:
-                pdf.cell(200, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(10)
-
-    # Itens Bobinas
-    if itens_bobinas:
-        pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS BOBINAS", ln=True)
-        pdf.set_font("Arial", size=8)
-        for item in list(itens_bobinas):
-            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
-            if "espessura" in item:
-                txt += f" | Esp: {item['espessura']}mm"
-            pdf.multi_cell(200, 5, txt)
-            pdf.ln(1)
-
-        if resumo_bob:
-            m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
-            pdf.ln(3)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, "Resumo - Bobinas", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.cell(200, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
-            pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(200, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(10)
-
-    # Observações
-    if observacao:
-        pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 11, "OBSERVAÇÕES", ln=True)
-        pdf.set_font("Arial", size=11)
-        pdf.multi_cell(200, 11, str(observacao))
-        pdf.ln(4)
-
-    # Vendedor
-    if vendedor:
-        pdf.set_font("Arial", "", 10)
-        pdf.multi_cell(200, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
-        pdf.ln(5)
-
-    buffer = BytesIO()
-    pdf.output(buffer)
-    buffer.seek(0)
-    return buffer
-
-# ============================
-# Inicialização de listas (chaves padronizadas)
-# ============================
-if "itens_confeccionados" not in st.session_state:
-    st.session_state["itens_confeccionados"] = []
-if "bobinas_adicionadas" not in st.session_state:
-    st.session_state["bobinas_adicionadas"] = []
-
-# ============================
-# Tabelas de ICMS e ST
+# Tabelas ICMS e ST
 # ============================
 icms_por_estado = {
     "SP": 18, "MG": 12, "PR": 12, "RJ": 12, "RS": 12, "SC": 12
@@ -137,44 +32,147 @@ st_por_estado = {
 }
 
 # ============================
-# Função utilitária segura para rerun (evita AttributeError em alguns ambientes)
+# Função utilitária rerun
 # ============================
 def _try_rerun():
     try:
         if hasattr(st, "experimental_rerun"):
             st.experimental_rerun()
     except Exception:
-        # se ocorrer qualquer problema ao rerun, apenas segue em frente (evita crash)
         pass
 
 # ============================
-# Funções de cálculo (únicas definições, sem duplicidades)
+# Funções de cálculo
 # ============================
 def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado=""):
-    """Calcula m², IPI (3.25%) e aplica ST sobre valor_final (IPI incluso) somente
-       se existir item 'Encerado' e tipo_cliente == 'Revenda'"""
     m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
     valor_bruto = m2_total * preco_m2
     valor_ipi = valor_bruto * 0.0325
     valor_final = valor_bruto + valor_ipi
 
-    # ST (aplicado sobre valor_final) — somente para Encerado + Revenda
     valor_st = 0
     aliquota_st = 0
     if any(item.get('produto') == "Encerado" for item in itens) and tipo_cliente == "Revenda":
         aliquota_st = st_por_estado.get(estado, 0)
-        valor_st = valor_final * aliquota_st / 100  # <-- aqui multiplicamos pelo valor_final
+        valor_st = valor_final * aliquota_st / 100
         valor_final += valor_st
 
     return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
 def calcular_valores_bobinas(itens, preco_m2):
-    """Bobinas: sem ST. IPI 9.75% aplicado sobre o bruto (m * preço)."""
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
     valor_bruto = m_total * preco_m2
-    valor_ipi = valor_bruto * 0.0975
-    valor_final = valor_bruto + valor_ipi
+    produtos_isentos = ["Encerado", "Acrylic", "Agora"]
+    if all(item['produto'] in produtos_isentos for item in itens):
+        valor_ipi = 0
+        valor_final = valor_bruto
+    else:
+        valor_ipi = valor_bruto * 0.0975
+        valor_final = valor_bruto + valor_ipi
     return m_total, valor_bruto, valor_ipi, valor_final
+
+# ============================
+# Função para gerar PDF
+# ============================
+def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, tipo_cliente="", estado=""):
+    pdf = FPDF('P','mm','A4')
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=False)
+
+    # Cabeçalho
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align="C")
+    pdf.ln(2)
+    pdf.set_font("Arial", "", 9)
+    brasilia_tz = pytz.timezone("America/Sao_Paulo")
+    pdf.cell(0, 5, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.ln(1)
+
+    # Cliente
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 5, "Cliente", ln=True)
+    pdf.set_font("Arial", "", 9)
+    pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
+    if cliente.get('cnpj','').strip():
+        pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
+    if tipo_cliente.strip():
+        pdf.multi_cell(0, 5, f"Tipo de Cliente: {tipo_cliente}")
+    if estado.strip():
+        pdf.multi_cell(0, 5, f"Estado: {estado}")
+    pdf.ln(1)
+
+    # Itens Confeccionados
+    if itens_confeccionados:
+        pdf.set_font("Arial", "B", 10)
+        pdf.cell(0, 5, "ITENS CONFECCIONADOS", ln=True)
+        pdf.set_font("Arial", "", 8)
+        for item in itens_confeccionados:
+            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
+            pdf.multi_cell(0, 4, txt)
+        if resumo_conf:
+            m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
+            pdf.ln(1)
+            pdf.set_font("Arial", "B", 10)
+            pdf.cell(0, 5, "Resumo - Confeccionados", ln=True)
+            pdf.set_font("Arial", "", 8)
+            pdf.cell(0, 4, f"Área Total: {m2_total:.2f} m²".replace(".", ","), ln=True)
+            pdf.cell(0, 4, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 4, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+            if valor_st > 0:
+                pdf.cell(0, 4, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
+            pdf.set_font("Arial", "B", 10)
+            pdf.cell(0, 5, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+            pdf.ln(1)
+
+    # Itens Bobinas
+    if itens_bobinas:
+        pdf.set_font("Arial", "B", 10)
+        pdf.cell(0, 5, "ITENS BOBINAS", ln=True)
+        pdf.set_font("Arial", "", 8)
+        for item in itens_bobinas:
+            txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
+            if "espessura" in item:
+                txt += f" | Esp: {item['espessura']}mm"
+            pdf.multi_cell(0, 4, txt)
+        if resumo_bob:
+            m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
+            pdf.ln(1)
+            pdf.set_font("Arial", "B", 10)
+            pdf.cell(0, 5, "Resumo - Bobinas", ln=True)
+            pdf.set_font("Arial", "", 8)
+            pdf.cell(0, 4, f"Total de Metros Lineares: {m_total:.2f} m".replace(".", ","), ln=True)
+            pdf.cell(0, 4, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 4, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+            pdf.set_font("Arial", "B", 10)
+            pdf.cell(0, 5, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+            pdf.ln(1)
+
+    # Observações
+    if observacao:
+        pdf.set_font("Arial", "B", 10)
+        pdf.cell(0, 5, "OBSERVAÇÕES", ln=True)
+        pdf.set_font("Arial", "", 8)
+        pdf.multi_cell(0, 4, str(observacao))
+        pdf.ln(1)
+
+    # Vendedor
+    if vendedor:
+        pdf.set_font("Arial", "", 8)
+        pdf.multi_cell(0, 4, f"Vendedor: {vendedor.get('nome','')} | Telefone: {vendedor.get('tel','')} | E-mail: {vendedor.get('email','')}")
+        pdf.ln(1)
+
+    buffer = BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    return buffer
+
+# ============================
+# Inicialização de listas
+# ============================
+if "itens_confeccionados" not in st.session_state:
+    st.session_state["itens_confeccionados"] = []
+if "bobinas_adicionadas" not in st.session_state:
+    st.session_state["bobinas_adicionadas"] = []
 
 # ============================
 # Interface Streamlit
@@ -182,12 +180,12 @@ def calcular_valores_bobinas(itens, preco_m2):
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
-# --- Data ---
+# Data
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
 st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
 
-# --- Cliente ---
+# Cliente
 st.subheader("👤 Dados do Cliente")
 col1, col2 = st.columns(2)
 with col1:
@@ -195,46 +193,37 @@ with col1:
 with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
 
-# ============================
 # Produtos
-# ============================
-produtos_lista = [
-    " ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
-    "Lonaleve","Sider Truck Teto","Sider Truck Lateral","Capota Marítima",
-    "Night&Day Plus 1,40","Night&Day Plus 2,00","Night&Day Listrado","Vitro 0,40",
-    "Vitro 0,50","Vitro 0,60","Vitro 0,80","Vitro 1,00","Durasol","Poli Light",
-    "Sunset","Tenda","Tenda 2,3x2,3","Acrylic","Agora","Lona Galpão Teto",
-    "Lona Galpão Lateral","Tela de Sombreamento 30%","Tela de Sombreamento 50%",
-    "Tela de Sombreamento 80%","Geomembrana RV 0,42","Geomembrana RV 0,80",
-    "Geomembrana RV 1,00","Geomembrana ATX 0,80","Geomembrana ATX 1,00",
-    "Geomembrana ATX 1,50","Geo Bio s/ reforço 1,00","Geo Bio s/ reforço 1,20",
-    "Geo Bio s/ reforço 1,50","Geo Bio c/ reforço 1,20","Cristal com Pó",
-    "Cristal com Papel","Cristal Colorido","Filme Liso","Filme Kamurcinha",
-    "Filme Verniz","Block Lux","Filme Dimension","Filme Sarja","Filme Emborrachado",
-    "Filme Pneumático","Adesivo Branco Brilho 0,08","Adesivo Branco Brilho 0,10",
-    "Adesivo Branco Fosco 0,10","Adesivo Preto Brilho 0,08","Adesivo Preto Fosco 0,10",
-    "Adesivo Transparente Brilho 0,08","Adesivo Transparente Jateado 0,08",
-    "Adesivo Mascara Brilho 0,08","Adesivo Aço Escovado 0,08"
-]
+produtos_lista = [" ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
+                  "Lonaleve","Sider Truck Teto","Sider Truck Lateral","Capota Marítima",
+                  "Night&Day Plus 1,40","Night&Day Plus 2,00","Night&Day Listrado","Vitro 0,40",
+                  "Vitro 0,50","Vitro 0,60","Vitro 0,80","Vitro 1,00","Durasol","Poli Light",
+                  "Sunset","Tenda","Tenda 2,3x2,3","Acrylic","Agora","Lona Galpão Teto",
+                  "Lona Galpão Lateral","Tela de Sombreamento 30%","Tela de Sombreamento 50%",
+                  "Tela de Sombreamento 80%","Geomembrana RV 0,42","Geomembrana RV 0,80",
+                  "Geomembrana RV 1,00","Geomembrana ATX 0,80","Geomembrana ATX 1,00",
+                  "Geomembrana ATX 1,50","Geo Bio s/ reforço 1,00","Geo Bio s/ reforço 1,20",
+                  "Geo Bio s/ reforço 1,50","Geo Bio c/ reforço 1,20","Cristal com Pó",
+                  "Cristal com Papel","Cristal Colorido","Filme Liso","Filme Kamurcinha",
+                  "Filme Verniz","Block Lux","Filme Dimension","Filme Sarja","Filme Emborrachado",
+                  "Filme Pneumático","Adesivo Branco Brilho 0,08","Adesivo Branco Brilho 0,10",
+                  "Adesivo Branco Fosco 0,10","Adesivo Preto Brilho 0,08","Adesivo Preto Fosco 0,10",
+                  "Adesivo Transparente Brilho 0,08","Adesivo Transparente Jateado 0,08",
+                  "Adesivo Mascara Brilho 0,08","Adesivo Aço Escovado 0,08"]
 
 prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")
 
-# ============================
-# Seleção de Produto (MOVER PARA CIMA)
-# ============================
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 
-# --- Tipo e Estado do Cliente ---
 tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
 estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
-# ICMS automático
+# ICMS e ST
 aliquota_icms = icms_por_estado.get(estado, 7)
 st.info(f"🔹 Alíquota de ICMS para {estado}: **{aliquota_icms}% (já incluso no preço)**")
 
-# ST aparece só se Encerado + Revenda (aviso)
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
@@ -383,22 +372,20 @@ with col2:
 # ============================
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
-
-    # ✅ Sem argumentos extras
+    vendedor = {"nome": st.text_input("Nome Vendedor"), "tel": st.text_input("Telefone"), "email": st.text_input("E-mail")}
+    
     resumo_conf = calcular_valores_confeccionados(
         st.session_state['itens_confeccionados'],
         preco_m2,
         tipo_cliente,
         estado
     ) if st.session_state['itens_confeccionados'] else None
-
+    
     resumo_bob = calcular_valores_bobinas(
         st.session_state['bobinas_adicionadas'],
         preco_m2
     ) if st.session_state['bobinas_adicionadas'] else None
 
-    # Gera PDF
     pdf_buffer = gerar_pdf(
         cliente,
         vendedor,
@@ -406,11 +393,11 @@ if st.button("📄 Gerar Orçamento em PDF"):
         st.session_state['bobinas_adicionadas'],
         resumo_conf,
         resumo_bob,
-        Observacao,
+        st.text_area("Observações"),
         tipo_cliente=tipo_cliente,
         estado=estado
     )
-
+    
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
         data=pdf_buffer,
