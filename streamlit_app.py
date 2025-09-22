@@ -56,7 +56,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m "
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
-                )
+            )
             pdf.multi_cell(200, 5, txt)
             pdf.ln(1)
 
@@ -87,7 +87,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m "
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
-                )
+            )
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
             pdf.multi_cell(200, 5, txt)
@@ -127,7 +127,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     return buffer
 
 # ============================
-# Inicialização de listas (chaves padronizadas)
+# Inicialização de listas
 # ============================
 if "itens_confeccionados" not in st.session_state:
     st.session_state["itens_confeccionados"] = []
@@ -155,40 +155,30 @@ st_por_estado = {
     "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
 }
 
-# ============================
-# Função utilitária segura para rerun (evita AttributeError em alguns ambientes)
-# ============================
 def _try_rerun():
     try:
         if hasattr(st, "experimental_rerun"):
             st.experimental_rerun()
     except Exception:
-        # se ocorrer qualquer problema ao rerun, apenas segue em frente (evita crash)
         pass
 
 # ============================
-# Funções de cálculo (únicas definições, sem duplicidades)
+# Funções de cálculo
 # ============================
 def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado=""):
-    """Calcula m², IPI (3.25%) e aplica ST sobre valor_final (IPI incluso) somente
-       se existir item 'Encerado' e tipo_cliente == 'Revenda'"""
     m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
     valor_bruto = m2_total * preco_m2
     valor_ipi = valor_bruto * 0.0325
     valor_final = valor_bruto + valor_ipi
-
-    # ST (aplicado sobre valor_final) — somente para Encerado + Revenda
     valor_st = 0
     aliquota_st = 0
     if any(item.get('produto') == "Encerado" for item in itens) and tipo_cliente == "Revenda":
         aliquota_st = st_por_estado.get(estado, 0)
-        valor_st = valor_final * aliquota_st / 100  # <-- aqui multiplicamos pelo valor_final
+        valor_st = valor_final * aliquota_st / 100
         valor_final += valor_st
-
     return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
 def calcular_valores_bobinas(itens, preco_m2):
-    """Bobinas: sem ST. IPI 9.75% aplicado sobre o bruto (m * preço)."""
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
     valor_bruto = m_total * preco_m2
     valor_ipi = valor_bruto * 0.0975
@@ -201,7 +191,6 @@ def calcular_valores_bobinas(itens, preco_m2):
 st.set_page_config(page_title="Calculadora Grupo Locomotiva", page_icon="📏", layout="centered")
 st.title("Orçamento - Grupo Locomotiva")
 
-# --- Data ---
 brasilia_tz = pytz.timezone("America/Sao_Paulo")
 data_hora_brasilia = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M")
 st.markdown(f"🕒 **Data e Hora:** {data_hora_brasilia}")
@@ -213,6 +202,9 @@ with col1:
     Cliente_nome = st.text_input("Razão ou Nome Fantasia", value=st.session_state.get("Cliente_nome",""))
 with col2:
     Cliente_CNPJ = st.text_input("CNPJ ou CPF (Opcional)", value=st.session_state.get("Cliente_CNPJ",""))
+
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
 
 # ============================
 # Produtos
@@ -407,27 +399,28 @@ with col1:
 with col2:
     vendedor_email = st.text_input("E-mail")
 
-# ============================
-# Botão para gerar PDF
-# ============================
+# --- Botão Gerar PDF ---
 if st.button("📄 Gerar Orçamento em PDF"):
-    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
+    cliente = {
+        "nome": Cliente_nome,
+        "cnpj": Cliente_CNPJ,
+        "tipo_cliente": tipo_cliente,
+        "estado": estado
+    }
+    vendedor = {"nome": "", "tel": "", "email": ""}  # Ajuste se tiver campos de vendedor
 
-    # ✅ Sem argumentos extras
     resumo_conf = calcular_valores_confeccionados(
         st.session_state['itens_confeccionados'],
-        preco_m2,
+        0,  # ajuste preco_m2 conforme interface
         tipo_cliente,
         estado
     ) if st.session_state['itens_confeccionados'] else None
 
     resumo_bob = calcular_valores_bobinas(
         st.session_state['bobinas_adicionadas'],
-        preco_m2
+        0  # ajuste preco_m2 conforme interface
     ) if st.session_state['bobinas_adicionadas'] else None
 
-    # Gera PDF
     pdf_buffer = gerar_pdf(
         cliente,
         vendedor,
@@ -435,8 +428,8 @@ if st.button("📄 Gerar Orçamento em PDF"):
         st.session_state['bobinas_adicionadas'],
         resumo_conf,
         resumo_bob,
-        Observacao,
-        preco_m2,
+        "",
+        0,  # ajuste preco_m2 conforme interface
         tipo_cliente=tipo_cliente,
         estado=estado
     )
@@ -447,5 +440,5 @@ if st.button("📄 Gerar Orçamento em PDF"):
         file_name="orcamento.pdf",
         mime="application/pdf"
     )
-
+    
 st.markdown("🔒 Os dados acima são apenas para inclusão no orçamento (PDF ou impressão futura).")
