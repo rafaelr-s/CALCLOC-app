@@ -32,15 +32,16 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(200, 6, "CLIENTE", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")
-    cnpj_cliente = str(cliente.get('cnpj','') or '').strip()
+    
+    # CNPJ/CPF sempre exibido
+    cnpj_cliente = str(cliente.get('cnpj','')).strip()
+    cnpj_formatado = cnpj_cliente
     if cnpj_cliente:
         if len(cnpj_cliente) == 11:  # CPF
             cnpj_formatado = f"{cnpj_cliente[:3]}.{cnpj_cliente[3:6]}.{cnpj_cliente[6:9]}-{cnpj_cliente[9:]}"
         elif len(cnpj_cliente) == 14:  # CNPJ
             cnpj_formatado = f"{cnpj_cliente[:2]}.{cnpj_cliente[2:5]}.{cnpj_cliente[5:8]}/{cnpj_cliente[8:12]}-{cnpj_cliente[12:]}"
-        else:
-            cnpj_formatado = cnpj_cliente
-        pdf.cell(200, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
+    pdf.cell(200, 5, f"CNPJ/CPF: {cnpj_formatado}", ln=True)
     pdf.ln(3)
 
     # Itens Confeccionados
@@ -48,13 +49,13 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", "B", 11)
         pdf.cell(200, 6, "ITENS CONFECCIONADOS", ln=True)
         pdf.set_font("Arial", size=8)
-        for item in itens_confeccionados:
+        for item in list(itens_confeccionados):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
             pdf.multi_cell(200, 5, txt)
+            pdf.ln(1)  # força espaçamento entre itens
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
-
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, "Resumo - Confeccionados", ln=True)
@@ -73,11 +74,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", "B", 11)
         pdf.cell(200, 6, "ITENS BOBINAS", ln=True)
         pdf.set_font("Arial", size=8)
-        for item in itens_bobinas:
+        for item in list(itens_bobinas):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
             pdf.multi_cell(200, 5, txt)
+            pdf.ln(1)
 
         if resumo_bob:
             m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
