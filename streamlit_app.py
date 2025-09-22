@@ -11,6 +11,11 @@ def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # ============================
+# Função para gerar PDF
+# ============================
+
+
+# ============================
 # Tabelas ICMS e ST
 # ============================
 icms_por_estado = {
@@ -78,88 +83,138 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf = FPDF('P','mm','A4')
     pdf.add_page()
     pdf.set_auto_page_break(auto=False)
+    
+    page_height = 297
+    margin = 10
+    current_height = margin
+
+    def add_line(h):
+        nonlocal current_height
+        current_height += h
+        if current_height > page_height - margin:
+            pdf.add_page()
+            current_height = margin
 
     # Cabeçalho
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 8, "Orçamento - Grupo Locomotiva", ln=True, align="C")
+    add_line(8)
     pdf.ln(2)
     pdf.set_font("Arial", "", 9)
     brasilia_tz = pytz.timezone("America/Sao_Paulo")
     pdf.cell(0, 5, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
+    add_line(7)
     pdf.ln(1)
 
     # Cliente
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 5, "Cliente", ln=True)
-    pdf.set_font("Arial", "", 9)
+    add_line(5)
+    pdf.set_font("Arial", "", 8)
     pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}")
+    add_line(5)
     if cliente.get('cnpj','').strip():
         pdf.multi_cell(0, 5, f"CNPJ/CPF: {cliente.get('cnpj','')}")
+        add_line(5)
     if tipo_cliente.strip():
         pdf.multi_cell(0, 5, f"Tipo de Cliente: {tipo_cliente}")
+        add_line(5)
     if estado.strip():
         pdf.multi_cell(0, 5, f"Estado: {estado}")
+        add_line(5)
     pdf.ln(1)
+    
+    # Ajusta tamanho da fonte conforme quantidade de itens
+    total_itens = len(itens_confeccionados) + len(itens_bobinas)
+    font_size = 10
+    if total_itens > 20:
+        font_size = 7
+    elif total_itens > 10:
+        font_size = 8
 
     # Itens Confeccionados
     if itens_confeccionados:
-        pdf.set_font("Arial", "B", 10)
+        pdf.set_font("Arial", "B", font_size)
         pdf.cell(0, 5, "ITENS CONFECCIONADOS", ln=True)
-        pdf.set_font("Arial", "", 8)
+        add_line(5)
+        pdf.set_font("Arial", "", font_size-1)
         for item in itens_confeccionados:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
             pdf.multi_cell(0, 4, txt)
+            add_line(4)
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
             pdf.ln(1)
-            pdf.set_font("Arial", "B", 10)
+            add_line(2)
+            pdf.set_font("Arial", "B", font_size)
             pdf.cell(0, 5, "Resumo - Confeccionados", ln=True)
-            pdf.set_font("Arial", "", 8)
+            add_line(5)
+            pdf.set_font("Arial", "", font_size-1)
             pdf.cell(0, 4, f"Área Total: {m2_total:.2f} m²".replace(".", ","), ln=True)
+            add_line(4)
             pdf.cell(0, 4, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            add_line(4)
             pdf.cell(0, 4, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+            add_line(4)
             if valor_st > 0:
                 pdf.cell(0, 4, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
-            pdf.set_font("Arial", "B", 10)
+                add_line(4)
+            pdf.set_font("Arial", "B", font_size)
             pdf.cell(0, 5, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+            add_line(5)
             pdf.ln(1)
+            add_line(2)
 
     # Itens Bobinas
     if itens_bobinas:
-        pdf.set_font("Arial", "B", 10)
+        pdf.set_font("Arial", "B", font_size)
         pdf.cell(0, 5, "ITENS BOBINAS", ln=True)
-        pdf.set_font("Arial", "", 8)
+        add_line(5)
+        pdf.set_font("Arial", "", font_size-1)
         for item in itens_bobinas:
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
             pdf.multi_cell(0, 4, txt)
+            add_line(4)
         if resumo_bob:
             m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
             pdf.ln(1)
-            pdf.set_font("Arial", "B", 10)
+            add_line(2)
+            pdf.set_font("Arial", "B", font_size)
             pdf.cell(0, 5, "Resumo - Bobinas", ln=True)
-            pdf.set_font("Arial", "", 8)
+            add_line(5)
+            pdf.set_font("Arial", "", font_size-1)
             pdf.cell(0, 4, f"Total de Metros Lineares: {m_total:.2f} m".replace(".", ","), ln=True)
+            add_line(4)
             pdf.cell(0, 4, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            add_line(4)
             pdf.cell(0, 4, f"IPI: {_format_brl(valor_ipi)}", ln=True)
-            pdf.set_font("Arial", "B", 10)
+            add_line(4)
+            pdf.set_font("Arial", "B", font_size)
             pdf.cell(0, 5, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+            add_line(5)
             pdf.ln(1)
+            add_line(2)
 
     # Observações
     if observacao:
-        pdf.set_font("Arial", "B", 10)
+        pdf.set_font("Arial", "B", font_size)
         pdf.cell(0, 5, "OBSERVAÇÕES", ln=True)
-        pdf.set_font("Arial", "", 8)
+        add_line(5)
+        pdf.set_font("Arial", "", font_size-1)
         pdf.multi_cell(0, 4, str(observacao))
+        add_line(4*len(observacao.split("\n")))
         pdf.ln(1)
+        add_line(2)
 
     # Vendedor
     if vendedor:
-        pdf.set_font("Arial", "", 8)
+        pdf.set_font("Arial", "", font_size-1)
         pdf.multi_cell(0, 4, f"Vendedor: {vendedor.get('nome','')} | Telefone: {vendedor.get('tel','')} | E-mail: {vendedor.get('email','')}")
+        add_line(4)
         pdf.ln(1)
+        add_line(2)
 
     buffer = BytesIO()
     pdf.output(buffer)
