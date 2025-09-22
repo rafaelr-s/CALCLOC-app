@@ -167,7 +167,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     return buffer
 
 # ============================
-# Inicialização de listas
+# Inicialização de itens Confeccionados e Bobinas
 # ============================
 if "itens_confeccionados" not in st.session_state:
     st.session_state["itens_confeccionados"] = []
@@ -357,12 +357,12 @@ st.subheader("🔎 Observações")
 Observacao = st.text_area("Insira aqui alguma observação sobre o orçamento (opcional)")
 
 # ============================
-# Vendedor
+# Campos Vendedor
 # ============================
 st.subheader("🗣️ Vendedor(a)")
 col1, col2 = st.columns(2)
 with col1:
-    vendedor_nome = st.text_input("Nome")
+    vendedor_nome = st.text_input("Nome Vendedor")
     vendedor_tel = st.text_input("Telefone")
 with col2:
     vendedor_email = st.text_input("E-mail")
@@ -372,7 +372,7 @@ with col2:
 # ============================
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": st.text_input("Nome Vendedor"), "tel": st.text_input("Telefone"), "email": st.text_input("E-mail")}
+    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
     
     resumo_conf = calcular_valores_confeccionados(
         st.session_state['itens_confeccionados'],
