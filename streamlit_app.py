@@ -29,7 +29,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
 
     # Dados do Cliente
     pdf.set_font("Arial", "B", 11)
-    pdf.cell(200, 6, "CLIENTE", ln=True)
+    pdf.cell(200, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
    # Mostra CNPJ ou CPF somente se informado
@@ -41,7 +41,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS CONFECCIONADOS", ln=True)
+        pdf.cell(200, 6, "Itens Confeccionados", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
@@ -66,7 +66,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     # Itens Bobinas
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS BOBINAS", ln=True)
+        pdf.cell(200, 6, "Itens Bobina", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
@@ -91,7 +91,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 11, "OBSERVAÇÕES", ln=True)
+        pdf.cell(200, 11, "Observações", ln=True)
         pdf.set_font("Arial", size=11)
         pdf.multi_cell(200, 11, str(observacao))
         pdf.ln(4)
