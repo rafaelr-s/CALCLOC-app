@@ -20,7 +20,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_font("Arial", "B", 14)
 
     # Cabeçalho
-    pdf.cell(0, 10, "Orçamento - Grupo Locomotiva", ln=True, align="C")
+    pdf.cell(0, 12, "Orçamento - Grupo Locomotiva", ln=True, align="C")
     pdf.ln(10)
     pdf.set_font("Arial", size=9)
     brasilia_tz = pytz.timezone("America/Sao_Paulo")
@@ -382,26 +382,63 @@ with col2:
     vendedor_email = st.text_input("E-mail")
 
 # ============================
-# Botão Gerar PDF
+# Botão para gerar PDF
 # ============================
-if st.button("📄 Gerar Orçamento em PDF"):
-    cliente = {"nome": Cliente_nome, "cnpj": Cliente_CNPJ}
-    vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
-    resumo_conf = calcular_valores_confeccionados(st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado) if st.session_state['itens_confeccionados'] else None
-    resumo_bob = calcular_valores_bobinas(st.session_state['bobinas_adicionadas'], preco_m2) if st.session_state['bobinas_adicionadas'] else None
+st.markdown("---")
+st.header("📄 Gerar Orçamento em PDF")
 
-    pdf_buffer = gerar_pdf(cliente, vendedor,
-                           st.session_state['itens_confeccionados'],
-                           st.session_state['bobinas_adicionadas'],
-                           resumo_conf,
-                           resumo_bob,
-                           Observacao,
-                           tipo_cliente,
-                           estado)
+# --- Dados do Cliente ---
+with st.form("dados_cliente"):
+    nome = st.text_input("Nome do Cliente")
+    endereco = st.text_input("Endereço")
+    cidade = st.text_input("Cidade")
+    estado_cli = st.text_input("Estado")
+    telefone = st.text_input("Telefone")
+    email = st.text_input("E-mail")
+    documento = st.text_input("CNPJ ou CPF (Opcional)")
+
+    gerar = st.form_submit_button("📄 Gerar PDF")
+
+if gerar:
+    dados_cliente = {
+        "nome": nome,
+        "endereco": endereco,
+        "cidade": cidade,
+        "estado": estado_cli,
+        "telefone": telefone,
+        "email": email,
+        "documento": documento
+    }
+
+    # Resumos (se existirem)
+    resumo_conf = None
+    resumo_bob = None
+    if st.session_state['itens_confeccionados']:
+        resumo_conf = calcular_valores_confeccionados(
+            st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado, tipo_produto
+        )
+    if st.session_state['itens_bobinas']:
+        resumo_bob = calcular_valores_bobinas(
+            st.session_state['itens_bobinas'], preco_m2, tipo_cliente
+        )
+
+    # Gera PDF
+    pdf = gerar_pdf(
+        dados_cliente,
+        st.session_state['itens_confeccionados'],
+        st.session_state['itens_bobinas'],
+        resumo_conf,
+        resumo_bob,
+        logo="logo.png"  # coloque o caminho da sua logo aqui ou remova se não usar
+    )
+
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    pdf_bytes = pdf_output.getvalue()
 
     st.download_button(
         label="⬇️ Baixar Orçamento em PDF",
-        data=pdf_buffer,
+        data=pdf_bytes,
         file_name="orcamento.pdf",
         mime="application/pdf"
     )
