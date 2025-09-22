@@ -19,12 +19,11 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_font("Arial", "B", 14)
 
-    largura_disponivel = pdf.w - 20  # largura da página menos margens
-
     # Cabeçalho
     pdf.cell(0, 10, "Orçamento - Grupo Locomotiva", ln=True, align="C")
     pdf.ln(10)
     pdf.set_font("Arial", size=9)
+    brasilia_tz = pytz.timezone("America/Sao_Paulo")
     pdf.cell(0, 6, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
@@ -54,15 +53,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.multi_cell(200, 5, txt)
 
         if resumo_conf:
-            m2_total, valor_bruto, valor_ipi, valor_final = resumo_conf
-
-            # Cálculo ST se necessário
-            valor_st = 0
-            aliquota_st = 0
-            if any(item['produto'] == "Encerado" for item in itens_confeccionados) and tipo_cliente == "Revenda":
-                aliquota_st = st_por_estado.get(estado, 0)
-                valor_st = valor_final * aliquota_st / 100
-                valor_final += valor_st
+            m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
 
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
@@ -118,7 +109,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.output(buffer)
     buffer.seek(0)
     return buffer
-
+    
 # ============================
 # Inicialização de listas
 # ============================
