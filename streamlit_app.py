@@ -436,6 +436,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
         resumo_conf,
         resumo_bob,
         Observacao,
+        preco_m2,
         tipo_cliente=tipo_cliente,
         estado=estado
     )
