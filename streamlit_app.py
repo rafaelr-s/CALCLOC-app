@@ -35,7 +35,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
    # Mostra CNPJ ou CPF somente se informado
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
-    pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
+        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
     pdf.ln(1)
         
     # Itens Confeccionados
