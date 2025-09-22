@@ -40,7 +40,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS CONFECCIONADOS", ln=True)
+        pdf.cell(200, 6, "Itens Confeccionados", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m | Cor: {item.get('cor','')}"
@@ -60,12 +60,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 pdf.cell(200, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(10)
+            pdf.ln(5)
 
     # Itens Bobinas
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "ITENS BOBINAS", ln=True)
+        pdf.cell(200, 6, "Itens Bobinas", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
             txt = f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m | Cor: {item.get('cor','')}"
@@ -85,12 +85,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(200, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(200, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
-            pdf.ln(10)
+            pdf.ln(5)
 
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 11, "OBSERVAÇÕES", ln=True)
+        pdf.cell(200, 11, "Observações", ln=True)
         pdf.set_font("Arial", size=9)
         pdf.multi_cell(200, 9, str(observacao))
         pdf.ln(1)
