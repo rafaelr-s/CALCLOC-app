@@ -24,7 +24,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.ln(10)
     pdf.set_font("Arial", size=9)
     brasilia_tz = pytz.timezone("America/Sao_Paulo")
-    pdf.cell(0, 6, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.cell(0, 6, f"Data e Hora: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
     # Dados do Cliente
