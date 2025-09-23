@@ -31,17 +31,18 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_font("Arial", "B", 11)
     pdf.cell(200, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(50, 5, f"Nome/Razão: {cliente.get('nome','')}")    
-    pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}", align="L")
+
     pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}", align="L")
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
         pdf.multi_cell(0, 5, f"CNPJ/CPF: {cnpj_cpf}", align="L")
-        if cliente.get("tipo_cliente"):
-            pdf.multi_cell(0, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
-            if cliente.get("estado"):
-                pdf.multi_cell(0, 5, f"Estado: {cliente['estado']}", align="L")
-        
+    if cliente.get("tipo_cliente"):
+        pdf.multi_cell(0, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
+    if cliente.get("estado"):
+        pdf.multi_cell(0, 5, f"Estado: {cliente['estado']}", align="L")
+    if cliente.get("frete"):
+        pdf.multi_cell(0, 5, f"Tipo de Frete: {cliente['frete']}", align="L")
+
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
@@ -357,26 +358,19 @@ if tipo_produto == "Bobina":
             st.rerun()
 
 # ============================
-# Observações e Vendedor
+# Tipo de Frete
 # ============================
-st.subheader("🔎 Observações")
-Observacao = st.text_area("Insira aqui alguma observação sobre o orçamento (opcional)")
+st.subheader("🚚 Tipo de Frete")
+frete = st.radio("Selecione o tipo de frete:", ["CIF", "FOB"])
 
-st.subheader("🗣️ Vendedor(a)")
-col1, col2 = st.columns(2)
-with col1:
-    vendedor_nome = st.text_input("Nome")
-    vendedor_tel = st.text_input("Telefone")
-with col2:
-    vendedor_email = st.text_input("E-mail")
-
-# --- Botão Gerar PDF ---
+# Quando gerar o PDF
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {
         "nome": Cliente_nome,
         "cnpj": Cliente_CNPJ,
         "tipo_cliente": tipo_cliente,
-        "estado": estado
+        "estado": estado,
+        "frete": frete
     }
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
 
