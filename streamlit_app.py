@@ -33,7 +33,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_font("Arial", size=10)
     largura_util = pdf.w - 2*pdf.l_margin  # largura útil para multi_cell
     
-    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
+    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete", "tipo_pedido"]:
         valor = str(cliente.get(chave, "") or "")
         if valor.strip():
             pdf.cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
@@ -156,24 +156,39 @@ st_por_estado = {
     "RR": 27, "AC": 27, "AP": 29, "MA": 29, "PI": 22, "TO": 0
 }
 
-def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado=""):
+def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado="", tipo_pedido="Direta"):
     m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
     valor_bruto = m2_total * preco_m2
-    valor_ipi = valor_bruto * 0.0325
-    valor_final = valor_bruto + valor_ipi
-    valor_st = 0
-    aliquota_st = 0
-    if any(item.get('produto') == "Encerado" for item in itens) and tipo_cliente == "Revenda":
-        aliquota_st = st_por_estado.get(estado, 0)
-        valor_st = valor_final * aliquota_st / 100
-        valor_final += valor_st
-    return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
-def calcular_valores_bobinas(itens, preco_m2):
+    # Se for industrialização → sem impostos
+    if tipo_pedido == "Industrialização":
+        valor_ipi = 0
+        valor_st = 0
+        aliquota_st = 0
+        valor_final = valor_bruto
+    else:
+        valor_ipi = valor_bruto * 0.0325
+        valor_final = valor_bruto + valor_ipi
+        valor_st = 0
+        aliquota_st = 0
+        if any(item.get('produto') == "Encerado" for item in itens) and tipo_cliente == "Revenda":
+            aliquota_st = st_por_estado.get(estado, 0)
+            valor_st = valor_final * aliquota_st / 100
+            valor_final += valor_st
+
+    return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
+    
+def calcular_valores_bobinas(itens, preco_m2, tipo_pedido="Direta"):
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
     valor_bruto = m_total * preco_m2
-    valor_ipi = valor_bruto * 0.0975
-    valor_final = valor_bruto + valor_ipi
+
+    if tipo_pedido == "Industrialização":
+        valor_ipi = 0
+        valor_final = valor_bruto
+    else:
+        valor_ipi = valor_bruto * 0.0975
+        valor_final = valor_bruto + valor_ipi
+
     return m_total, valor_bruto, valor_ipi, valor_final
 
 # ============================
@@ -196,6 +211,8 @@ with col2:
 
 tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
 estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
+
+tipo_pedido = st.radio("Tipo do Pedido:", ["Direta", "Industrialização"])
 
 produtos_lista = [
     " ","Lonil de PVC","Lonil KP","Lonil Inflável KP","Encerado","Duramax",
@@ -388,6 +405,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
         "tipo_cliente": tipo_cliente,
         "estado": estado,
         "frete": frete
+        "tipo_pedido": tipo_pedido
     }
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
 
@@ -395,12 +413,14 @@ if st.button("📄 Gerar Orçamento em PDF"):
         st.session_state['itens_confeccionados'],
         preco_m2,
         tipo_cliente,
-        estado
+        estado,
+        tipo_pedido
     ) if st.session_state['itens_confeccionados'] else None
 
     resumo_bob = calcular_valores_bobinas(
         st.session_state['bobinas_adicionadas'],
-        preco_m2
+        preco_m2,
+        tipo_pedido
     ) if st.session_state['bobinas_adicionadas'] else None
 
     pdf_buffer = gerar_pdf(
