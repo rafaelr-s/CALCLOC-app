@@ -251,6 +251,13 @@ aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
+
+# Industrialização não tem impostos
+st.write(f"**Valor Total sem Impostos:** {_format_brl(valor_total)}")
+
+if tipo_pedido != "Industrialização":
+    st.write(f"**IPI:** {_format_brl(ipi_valor)}")
+    st.write(f"**ST:** {_format_brl(st_valor)}")
     
 # ============================
 # Confeccionado
