@@ -17,49 +17,34 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    
-    # Cabeçalho
     pdf.set_font("Arial", "B", 14)
+
+    # Cabeçalho
     pdf.cell(0, 12, "Orçamento - Grupo Locomotiva", ln=True, align="C")
     pdf.ln(10)
-    
-    # Data
     pdf.set_font("Arial", size=9)
     brasilia_tz = pytz.timezone("America/Sao_Paulo")
     pdf.cell(0, 6, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
-    # ============================
     # Dados do Cliente
-    # ============================
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "Cliente", ln=True)
-    pdf.ln(2)
     pdf.set_font("Arial", size=10)
+    largura_util = pdf.w - 2*pdf.l_margin  # largura útil para multi_cell
 
-    largura_util = pdf.w - 2*pdf.l_margin
-
-    campos_cliente = [
-        ("Nome", cliente.get("nome", "")),
-        ("CNPJ/CPF", cliente.get("cnpj", "")),
-        ("Tipo Cliente", cliente.get("tipo_cliente", "")),
-        ("Estado", cliente.get("estado", "")),
-        ("Frete", cliente.get("frete", ""))
-    ]
-
-    for titulo, valor in campos_cliente:
+    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
+        valor = str(cliente.get(chave, "") or "")
         if valor.strip():
-            pdf.multi_cell(largura_util, 6, f"{titulo}: {valor}", align="L")
-    pdf.ln(4)
+            pdf.multi_cell(largura_util, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+    pdf.ln(5)
 
-    # ============================
     # Itens Confeccionados
-    # ============================
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 8, "Itens Confeccionados", ln=True)
         pdf.set_font("Arial", size=8)
-        for item in itens_confeccionados:
+        for item in list(itens_confeccionados):
             area_item = item['comprimento'] * item['largura'] * item['quantidade']
             valor_item = area_item * preco_m2
             txt = (
@@ -74,25 +59,23 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
-            pdf.set_font("Arial", size=10)
-            pdf.multi_cell(largura_util, 6, f"Preço por m² utilizado: {_format_brl(preco_m2)}")
-            pdf.multi_cell(largura_util, 6, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²")
-            pdf.multi_cell(largura_util, 6, f"Valor Bruto: {_format_brl(valor_bruto)}")
-            pdf.multi_cell(largura_util, 6, f"IPI (3,25%): {_format_brl(valor_ipi)}")
+            pdf.set_font("Arial", "", 10)
+            pdf.cell(0, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
+            pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
             if valor_st > 0:
-                pdf.multi_cell(largura_util, 6, f"ST ({aliquota_st}%): {_format_brl(valor_st)}")
+                pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
             pdf.set_font("Arial", "B", 11)
-            pdf.multi_cell(largura_util, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}")
+            pdf.cell(0, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
-    # ============================
     # Itens Bobinas
-    # ============================
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 8, "Itens Bobina", ln=True)
         pdf.set_font("Arial", size=8)
-        for item in itens_bobinas:
+        for item in list(itens_bobinas):
             metros_item = item['comprimento'] * item['quantidade']
             valor_item = metros_item * preco_m2
             txt = (
@@ -110,41 +93,34 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
-            pdf.set_font("Arial", size=10)
-            pdf.multi_cell(largura_util, 6, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}")
-            pdf.multi_cell(largura_util, 6, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m")
-            pdf.multi_cell(largura_util, 6, f"Valor Bruto: {_format_brl(valor_bruto)}")
-            pdf.multi_cell(largura_util, 6, f"IPI (9,75%): {_format_brl(valor_ipi)}")
+            pdf.set_font("Arial", "", 10)
+            pdf.cell(0, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
+            pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(0, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
             pdf.set_font("Arial", "B", 11)
-            pdf.multi_cell(largura_util, 8, f"Valor Final com IPI: {_format_brl(valor_final)}")
+            pdf.cell(0, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
-    # ============================
     # Observações
-    # ============================
     if observacao:
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 11, "Observações", ln=True)
         pdf.set_font("Arial", size=10)
-        pdf.multi_cell(largura_util, 6, str(observacao))
+        pdf.multi_cell(largura_util, 10, str(observacao))
         pdf.ln(1)
 
-    # ============================
     # Vendedor
-    # ============================
     if vendedor:
-        pdf.set_font("Arial", size=10)
+        pdf.set_font("Arial", "", 10)
         vendedor_txt = (
             f"Vendedor: {vendedor.get('nome','')}\n"
             f"Telefone: {vendedor.get('tel','')}\n"
             f"E-mail: {vendedor.get('email','')}"
         )
-        pdf.multi_cell(largura_util, 6, vendedor_txt)
+        pdf.multi_cell(largura_util, 8, vendedor_txt)
         pdf.ln(5)
 
-    # ============================
-    # Exportar PDF
-    # ============================
     buffer = BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
