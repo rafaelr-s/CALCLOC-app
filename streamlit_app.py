@@ -32,15 +32,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=10)
     largura_util = pdf.w - 2*pdf.l_margin  # largura útil para multi_cell
-
-    for chave in ["nome", 
-                  "cnpj", 
-                  "tipo_cliente", 
-                  "estado", 
-                  "frete"]:
+    
+    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
         valor = str(cliente.get(chave, "") or "")
         if valor.strip():
-            pdf.cell(40, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+            pdf.cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+            pdf.ln(4)
     pdf.ln(5)
 
     # Itens Confeccionados
