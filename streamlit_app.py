@@ -109,7 +109,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.cell(0, 11, "Observações", ln=True)
         pdf.set_font("Arial", size=10)
         pdf.multi_cell(largura_util, 10, str(observacao))
-        pdf.ln(1)
+        pdf.ln(10)
 
     # Vendedor
     if vendedor:
