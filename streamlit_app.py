@@ -27,17 +27,28 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 6, f"Data: {datetime.now(brasilia_tz).strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(4)
 
-    # Dados do Cliente
+    # ============================
+    # Dados do Cliente (corrigido)
+    # ============================
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "Cliente", ln=True)
+    pdf.ln(2)
     pdf.set_font("Arial", size=10)
-    largura_util = pdf.w - 2*pdf.l_margin  # largura útil para multi_cell
 
-    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
-        valor = str(cliente.get(chave, "") or "")
+    largura_util = pdf.w - 2*pdf.l_margin  # largura total utilizável
+
+    campos_cliente = [
+        ("Nome", cliente.get("nome", "")),
+        ("CNPJ/CPF", cliente.get("cnpj", "")),
+        ("Tipo Cliente", cliente.get("tipo_cliente", "")),
+        ("Estado", cliente.get("estado", "")),
+        ("Frete", cliente.get("frete", ""))
+    ]
+
+    for titulo, valor in campos_cliente:
         if valor.strip():
-            pdf.multi_cell(40, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
-    pdf.ln(5)
+            pdf.multi_cell(largura_util, 6, f"{titulo}: {valor}", align="L")
+    pdf.ln(4)
 
     # Itens Confeccionados
     if itens_confeccionados:
