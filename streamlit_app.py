@@ -332,7 +332,7 @@ if tipo_produto == "Bobina":
                     f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
                 )
                 if 'espessura' in item:
-                    detalhes += f" | Esp: {item['espessura']}mm"
+                    detalhes += f" | Esp: {item['espessura']:.2f}mm"
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(detalhes)
             with col2:
