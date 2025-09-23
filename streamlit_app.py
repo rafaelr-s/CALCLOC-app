@@ -32,16 +32,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=10)
     
-    pdf.multi_cell(0, 6, f"Nome/Razão: {cliente.get('nome','')}", align="L")
-    if cliente.get("cnpj"):
-        pdf.multi_cell(0, 6, f"CNPJ/CPF: {cliente['cnpj']}", align="L")
-    if cliente.get("tipo_cliente"):
-        pdf.multi_cell(0, 6, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
-    if cliente.get("estado"):
-        pdf.multi_cell(0, 6, f"Estado: {cliente['estado']}", align="L")
-    if cliente.get("frete"):
-        pdf.multi_cell(0, 6, f"Tipo de Frete: {cliente['frete']}", align="L")
-    pdf.ln(5)
+    for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
+    valor = str(cliente.get(chave, "") or "")
+    if valor.strip():  # só adiciona se não for vazio
+        pdf.multi_cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
 
     # Itens Confeccionados
     if itens_confeccionados:
