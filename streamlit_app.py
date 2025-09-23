@@ -305,7 +305,7 @@ if tipo_produto == "Bobina":
 
     espessura_bobina = None
     if produto.startswith(("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")):
-        espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.01, value=0.10, step=0.01, key="esp_bob")
+        espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.010, value=0.10, step=0.010, key="esp_bob")
 
     if st.button("➕ Adicionar Bobina"):
         item_bobina = {
