@@ -279,9 +279,9 @@ if tipo_produto == "Confeccionado":
         st.experimental_rerun()
 
     if st.session_state['itens_confeccionados']:
-        m2_total, valor_bruto, valor_ipi, valor_final = calcular_valores_confeccionados(
-            st.session_state['itens_confeccionados'], preco_m2
-        )
+        m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
+    st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado
+)
         st.markdown("---")
         st.success("💰 **Resumo do Pedido - Confeccionado**")
         st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
