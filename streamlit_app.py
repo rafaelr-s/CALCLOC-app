@@ -32,13 +32,14 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(200, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=9)
     pdf.multi_cell(50, 5, f"Nome/Razão: {cliente.get('nome','')}")    
-    cnpj_cpf = cliente.get("cnpj", "").strip()
-    if cnpj_cpf:
-        pdf.multi_cell(50, 5, f"CNPJ/CPF: {cnpj_cpf}")
-    if cliente.get("tipo_cliente"):
-        pdf.multi_cell(50, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}")
-    if cliente.get("estado"):
-        pdf.multi_cell(50, 5, f"Estado: {cliente['estado']}")
+    pdf.multi_cell(0, 5, f"Nome/Razão: {cliente.get('nome','')}", align="L")
+cnpj_cpf = cliente.get("cnpj", "").strip()
+if cnpj_cpf:
+    pdf.multi_cell(0, 5, f"CNPJ/CPF: {cnpj_cpf}", align="L")
+if cliente.get("tipo_cliente"):
+    pdf.multi_cell(0, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
+if cliente.get("estado"):
+    pdf.multi_cell(0, 5, f"Estado: {cliente['estado']}", align="L")
     pdf.ln(2)
         
     # Itens Confeccionados
@@ -85,7 +86,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
             )
             if "espessura" in item:
-                txt += f" | Esp: {item['espessura']}mm"
+                txt += f" | Esp: {item['espessura']:.2f}mm"
             pdf.multi_cell(180, 8, txt)
             pdf.ln(1)
 
