@@ -404,7 +404,7 @@ if st.button("📄 Gerar Orçamento em PDF"):
         "cnpj": Cliente_CNPJ,
         "tipo_cliente": tipo_cliente,
         "estado": estado,
-        "frete": frete
+        "frete": frete,
         "tipo_pedido": tipo_pedido
     }
     vendedor = {"nome": vendedor_nome, "tel": vendedor_tel, "email": vendedor_email}
