@@ -276,7 +276,7 @@ if tipo_produto == "Confeccionado":
 
     if st.session_state['itens_confeccionados']:
         st.subheader("📋 Itens Adicionados")
-        for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):
+        for idx, item in enumerate(st.session_state['itens_confeccionados'][:] ):
             col1, col2, col3, col4 = st.columns([3,2,2,1])
             with col1:
                 area_item = item['comprimento'] * item['largura'] * item['quantidade']
@@ -301,14 +301,20 @@ if tipo_produto == "Confeccionado":
 
     if st.session_state['itens_confeccionados']:
         m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
-    st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado
-)
+            st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado, tipo_pedido
+        )
         st.markdown("---")
         st.success("💰 **Resumo do Pedido - Confeccionado**")
         st.write(f"📏 Área Total: **{m2_total:.2f} m²**".replace(".", ","))
         st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI (3.25%): **{_format_brl(valor_final)}**")
+
+        if tipo_pedido != "Industrialização":
+            st.write(f"🧾 IPI (3.25%): **{_format_brl(valor_ipi)}**")
+            if valor_st > 0:
+                st.write(f"⚖️ ST ({aliquota_st}%): **{_format_brl(valor_st)}**")
+            st.write(f"💰 Valor Final com IPI{(' + ST' if valor_st>0 else '')}: **{_format_brl(valor_final)}**")
+        else:
+            st.write(f"💰 Valor Final: **{_format_brl(valor_final)}**")
 
 # ============================
 # Bobina
@@ -341,7 +347,7 @@ if tipo_produto == "Bobina":
 
     if st.session_state['bobinas_adicionadas']:
         st.subheader("📋 Bobinas Adicionadas")
-        for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):
+        for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:] ):
             col1, col2, col3, col4 = st.columns([4,2,2,1])
             with col1:
                 metros_item = item['comprimento'] * item['quantidade']
@@ -364,14 +370,18 @@ if tipo_produto == "Bobina":
                     st.rerun()
 
         m_total, valor_bruto, valor_ipi, valor_final = calcular_valores_bobinas(
-            st.session_state['bobinas_adicionadas'], preco_m2
+            st.session_state['bobinas_adicionadas'], preco_m2, tipo_pedido
         )
         st.markdown("---")
         st.success("💰 **Resumo do Pedido - Bobinas**")
         st.write(f"📏 Total de Metros Lineares: **{m_total:.2f} m**".replace(".", ","))
         st.write(f"💵 Valor Bruto: **{_format_brl(valor_bruto)}**")
-        st.write(f"🧾 IPI (9.75%): **{_format_brl(valor_ipi)}**")
-        st.write(f"💰 Valor Final com IPI (9.75%): **{_format_brl(valor_final)}**")
+
+        if tipo_pedido != "Industrialização":
+            st.write(f"🧾 IPI (9.75%): **{_format_brl(valor_ipi)}**")
+            st.write(f"💰 Valor Final com IPI (9.75%): **{_format_brl(valor_final)}**")
+        else:
+            st.write(f"💰 Valor Final: **{_format_brl(valor_final)}**")
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
