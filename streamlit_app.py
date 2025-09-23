@@ -37,7 +37,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         valor = str(cliente.get(chave, "") or "")
         if valor.strip():
             pdf.cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
-            pdf.ln(4)
+            pdf.ln(5)
     pdf.ln(5)
 
     # Itens Confeccionados
