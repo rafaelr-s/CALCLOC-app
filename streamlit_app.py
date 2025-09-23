@@ -31,22 +31,22 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_font("Arial", "B", 11)
     pdf.cell(200, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=9)
-    pdf.multi_cell(200, 5, f"Nome/Razão: {cliente.get('nome','')}")    
+    pdf.multi_cell(180, 5, f"Nome/Razão: {cliente.get('nome','')}")    
 
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
-        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
+        pdf.multi_cell(180, 5, f"CNPJ/CPF: {cnpj_cpf}")
     
     if cliente.get("tipo_cliente"):
-        pdf.multi_cell(200, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}")
+        pdf.multi_cell(180, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}")
     if cliente.get("estado"):
-        pdf.multi_cell(200, 5, f"Estado: {cliente['estado']}")
+        pdf.multi_cell(180, 5, f"Estado: {cliente['estado']}")
     pdf.ln(2)
         
     # Itens Confeccionados
     if itens_confeccionados:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "Itens Confeccionados", ln=True)
+        pdf.cell(180, 8, "Itens Confeccionados", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
             area_item = item['comprimento'] * item['largura'] * item['quantidade']
@@ -55,29 +55,29 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m "
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
             )
-            pdf.multi_cell(200, 5, txt)
+            pdf.multi_cell(180, 8, txt)
             pdf.ln(1)
 
         if resumo_conf:
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, "Resumo - Confeccionados", ln=True)
+            pdf.cell(180, 10, "Resumo - Confeccionados", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(200, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
-            pdf.cell(200, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
-            pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(200, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+            pdf.cell(180, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(180, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
+            pdf.cell(180, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(180, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
             if valor_st > 0:
-                pdf.cell(200, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
+                pdf.cell(180, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
             pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(180, 10, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
     # Itens Bobinas
     if itens_bobinas:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 6, "Itens Bobina", ln=True)
+        pdf.cell(180, 8, "Itens Bobina", ln=True)
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
             metros_item = item['comprimento'] * item['quantidade']
@@ -88,35 +88,35 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             )
             if "espessura" in item:
                 txt += f" | Esp: {item['espessura']}mm"
-            pdf.multi_cell(200, 5, txt)
+            pdf.multi_cell(180, 8, txt)
             pdf.ln(1)
 
         if resumo_bob:
             m_total, valor_bruto, valor_ipi, valor_final = resumo_bob
             pdf.ln(3)
             pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, "Resumo - Bobinas", ln=True)
+            pdf.cell(180, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(200, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
-            pdf.cell(200, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
-            pdf.cell(200, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(200, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
+            pdf.cell(180, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(180, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
+            pdf.cell(180, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            pdf.cell(180, 8, f"IPI (9,75%): {_format_brl(valor_ipi)}", ln=True)
             pdf.set_font("Arial", "B", 11)
-            pdf.cell(200, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(180, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(200, 11, "Observações", ln=True)
-        pdf.set_font("Arial", size=9)
-        pdf.multi_cell(200, 9, str(observacao))
+        pdf.cell(180, 11, "Observações", ln=True)
+        pdf.set_font("Arial", size=10)
+        pdf.multi_cell(180, 10, str(observacao))
         pdf.ln(1)
 
     # Vendedor
     if vendedor:
         pdf.set_font("Arial", "", 10)
-        pdf.multi_cell(200, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
+        pdf.multi_cell(180, 8, f"Vendedor: {vendedor.get('nome','')}\nTelefone: {vendedor.get('tel','')}\nE-mail: {vendedor.get('email','')}")
         pdf.ln(5)
 
     buffer = BytesIO()
