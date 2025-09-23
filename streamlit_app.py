@@ -82,9 +82,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             
             if valor_st > 0:
                 pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
-            pdf.cell(0, "B", 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+                 pdf.set_font("Arial", "B", 8)
+            pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
         else:
-            pdf.cell(0, "B", 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
     # Itens Bobinas
@@ -118,9 +119,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             if cliente.get("tipo_pedido") != "Industrialização":
                 pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
             
-            pdf.cell(0, "B", 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+            pdf.set_font("Arial", "B", 10)
+            pdf.cell(0, 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
         else:
-            pdf.cell(0, "B", 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
         
     # Observações
