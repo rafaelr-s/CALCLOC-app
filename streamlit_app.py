@@ -85,7 +85,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
 
         # Valor Final em negrito
         pdf.set_font("Arial", "B", 10)
-        pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+        pdf.cell(0, 8, f"Valor Total{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
         pdf.set_font("Arial", "", 10)  # volta para fonte normal
         pdf.ln(10)
 
@@ -121,9 +121,9 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
             
             pdf.set_font("Arial", "B", 10)
-            pdf.cell(0, 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Valor Total com IPI: {_format_brl(valor_final)}", ln=True)
         else:
-            pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+            pdf.cell(0, 8, f"Valor Total: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
         
     # Observações
