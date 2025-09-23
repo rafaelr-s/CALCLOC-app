@@ -103,6 +103,24 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(0, 10, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
 
+# ============================
+# Totais
+# ============================
+pdf.set_font("Helvetica", "B", 12)
+pdf.cell(0, 10, "Totais do Pedido", ln=True)
+
+pdf.set_font("Helvetica", size=11)
+pdf.cell(0, 8, f"Área Total: {m2_total:.2f} m²", ln=True)
+pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+
+if tipo_pedido != "Industrialização":
+    pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+    if valor_st > 0:
+        pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
+    pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+else:
+    pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+
     # Observações
     if observacao:
         pdf.set_font("Arial", "B", 11)
