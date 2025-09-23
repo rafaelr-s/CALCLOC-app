@@ -68,24 +68,25 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.ln(1)
 
         if resumo_conf:
-            m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
-            pdf.ln(3)
-            pdf.set_font("Arial", "B", 11)
-            pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
-            pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
-            pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
-            pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            
-            if cliente.get("tipo_pedido") != "Industrialização":
-                pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
-            
-            if valor_st > 0:
-                pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
-                 pdf.set_font("Arial", "B", 8)
-            pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
-        else:
-            pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
+    m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = resumo_conf
+    pdf.ln(3)
+    pdf.set_font("Arial", "B", 11)
+    pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
+    pdf.set_font("Arial", "", 10)
+    pdf.cell(0, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
+    pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
+    pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+
+    if cliente.get("tipo_pedido") != "Industrialização":
+        pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+
+    if valor_st > 0:
+        pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
+
+    # Valor Final em negrito
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
+    pdf.set_font("Arial", "", 10)  # volta para fonte normal
             pdf.ln(10)
 
     # Itens Bobinas
