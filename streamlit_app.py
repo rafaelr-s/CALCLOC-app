@@ -10,6 +10,18 @@ from io import BytesIO
 def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+import streamlit as st
+from datetime import datetime
+import pytz
+from fpdf import FPDF
+from io import BytesIO
+
+# ============================
+# Função para formatar valores em R$
+# ============================
+def _format_brl(v):
+    return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
 # ============================
 # Função para gerar PDF
 # ============================
@@ -32,7 +44,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.cell(0, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=10)
     largura_util = pdf.w - 2*pdf.l_margin  # largura útil para multi_cell
-    
+
     for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete", "tipo_pedido"]:
         valor = str(cliente.get(chave, "") or "")
         if valor.strip():
@@ -64,9 +76,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(0, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
             pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
             pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
-            pdf.cell(0, 8, f"IPI (3,25%): {_format_brl(valor_ipi)}", ln=True)
+            
             if cliente.get("tipo_pedido") != "Industrialização":
-            pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+                pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+            
             if valor_st > 0:
                 pdf.cell(0, 8, f"ST ({aliquota_st}%): {_format_brl(valor_st)}", ln=True)
             pdf.cell(0, 8, f"Valor Final com IPI{(' + ST' if valor_st>0 else '')}: {_format_brl(valor_final)}", ln=True)
@@ -101,8 +114,10 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.cell(0, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
             pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
             pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
+            
             if cliente.get("tipo_pedido") != "Industrialização":
-            pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+                pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
+            
             pdf.cell(0, 8, f"Valor Final com IPI: {_format_brl(valor_final)}", ln=True)
         else:
             pdf.cell(0, 8, f"Valor Final: {_format_brl(valor_final)}", ln=True)
