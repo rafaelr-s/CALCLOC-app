@@ -251,25 +251,6 @@ aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
-
-# Industrialização não tem impostos
-valor_total = 0
-st.write(f"**Valor Total sem Impostos:** {_format_brl(valor_total)}")
-
-if tipo_pedido != "Industrialização":
-    # Se já houver itens adicionados → calcula os valores
-    if st.session_state['itens_confeccionados']:
-        _, _, ipi_valor, _, st_valor, _ = calcular_valores_confeccionados(
-            st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado, tipo_pedido
-        )
-    elif st.session_state['bobinas_adicionadas']:
-        _, _, ipi_valor, _ = calcular_valores_bobinas(
-            st.session_state['bobinas_adicionadas'], preco_m2, tipo_pedido
-        )
-        st_valor = 0.0  # Bobina não tem ST
-
-    st.write(f"**IPI:** {_format_brl(ipi_valor)}")
-    st.write(f"**ST:** {_format_brl(st_valor)}")
     
 # ============================
 # Confeccionado
