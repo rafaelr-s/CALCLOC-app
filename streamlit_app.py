@@ -363,6 +363,20 @@ if tipo_produto == "Bobina":
 st.subheader("🚚 Tipo de Frete")
 frete = st.radio("Selecione o tipo de frete:", ["CIF", "FOB"])
 
+# ============================ 
+# Observações e Vendedor 
+# ============================
+st.subheader("🔎 Observações")
+Observacao = st.text_area("Insira aqui alguma observação sobre o orçamento (opcional)")
+
+st.subheader("🗣️ Vendedor(a)")
+col1, col2 = st.columns(2)
+with col1:
+    vendedor_nome = st.text_input("Nome")
+    vendedor_tel = st.text_input("Telefone")
+    with col2:
+        vendedor_email = st.text_input("E-mail")
+
 # Quando gerar o PDF
 if st.button("📄 Gerar Orçamento em PDF"):
     cliente = {
