@@ -36,7 +36,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     for chave in ["nome", "cnpj ou cpf", "tipo do cliente", "estado", "frete"]:
         valor = str(cliente.get(chave, "") or "")
         if valor.strip():
-            pdf.multi_cell(05, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+            pdf.multi_cell(15, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
     pdf.ln(5)
 
     # Itens Confeccionados
