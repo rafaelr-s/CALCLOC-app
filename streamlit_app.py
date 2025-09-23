@@ -35,12 +35,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
 
     cnpj_cpf = cliente.get("cnpj", "").strip()
     if cnpj_cpf:
-        pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
+    pdf.multi_cell(200, 5, f"CNPJ/CPF: {cnpj_cpf}")
     
     if cliente.get("tipo_cliente"):
-        pdf.multi_cell(200, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}")
+    pdf.multi_cell(200, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}")
     if cliente.get("estado"):
-        pdf.multi_cell(200, 5, f"Estado: {cliente['estado']}")
+    pdf.multi_cell(200, 5, f"Estado: {cliente['estado']}")
     pdf.ln(2)
         
     # Itens Confeccionados
@@ -221,10 +221,6 @@ prefixos_espessura = ("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesiv
 produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
-
-# --- Tipo e Estado do Cliente (segunda vez, precisa de keys únicos) ---
-tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"], key="tipo_cliente_2")
-estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()), key="estado_2")
 
 # ICMS automático
 aliquota_icms = icms_por_estado[estado]
