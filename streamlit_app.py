@@ -222,9 +222,9 @@ produto = st.selectbox("Nome do Produto:", options=produtos_lista)
 tipo_produto = st.radio("Tipo do Produto:", ["Confeccionado", "Bobina"])
 preco_m2 = st.number_input("Preço por m² ou metro linear (R$):", min_value=0.0, value=0.0, step=0.01)
 
-# --- Tipo e Estado do Cliente ---
-tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"])
-estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()))
+# --- Tipo e Estado do Cliente (segunda vez, precisa de keys únicos) ---
+tipo_cliente = st.selectbox("Tipo do Cliente:", [" ","Consumidor Final", "Revenda"], key="tipo_cliente_2")
+estado = st.selectbox("Estado do Cliente:", options=list(icms_por_estado.keys()), key="estado_2")
 
 # ICMS automático
 aliquota_icms = icms_por_estado[estado]
