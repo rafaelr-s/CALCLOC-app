@@ -31,11 +31,13 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.set_font("Arial", "B", 11)
     pdf.cell(0, 6, "Cliente", ln=True)
     pdf.set_font("Arial", size=10)
-    
+
+    # Adiciona apenas valores não vazios
     for chave in ["nome", "cnpj", "tipo_cliente", "estado", "frete"]:
-    valor = str(cliente.get(chave, "") or "")
-    if valor.strip():  # só adiciona se não for vazio
-        pdf.multi_cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+        valor = str(cliente.get(chave, "") or "")
+        if valor.strip():  # só adiciona se não for vazio
+            pdf.multi_cell(0, 6, f"{chave.replace('_',' ').title()}: {valor}", align="L")
+    pdf.ln(5)
 
     # Itens Confeccionados
     if itens_confeccionados:
@@ -118,7 +120,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
     pdf.output(buffer)
     buffer.seek(0)
     return buffer
-
+    
 # ============================
 # Inicialização de listas
 # ============================
