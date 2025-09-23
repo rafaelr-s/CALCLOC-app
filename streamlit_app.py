@@ -29,18 +29,18 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
 
     # Dados do Cliente
     pdf.set_font("Arial", "B", 11)
-    pdf.cell(20, 6, "Cliente", ln=True)
-    pdf.set_font("Arial", size=9)
-    pdf.multi_cell(20, 5, f"Nome/Razão: {cliente.get('nome','')}", align="L")
+    pdf.cell(35, 6, "Cliente", ln=True)
+    pdf.set_font("Arial", size=8)
+    pdf.multi_cell(35, 5, f"Nome/Razão: {cliente.get('nome','')}", align="L")
     cnpj_cpf = (cliente.get("cnpj") or "").strip()
     if cnpj_cpf:
-        pdf.multi_cell(20, 5, f"CNPJ/CPF: {cnpj_cpf}", align="L")
+        pdf.multi_cell(35, 5, f"CNPJ/CPF: {cnpj_cpf}", align="L")
     if cliente.get("tipo_cliente"):
-        pdf.multi_cell(20, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
+        pdf.multi_cell(35, 5, f"Tipo do Cliente: {cliente['tipo_cliente']}", align="L")
     if cliente.get("estado"):
-        pdf.multi_cell(20, 5, f"Estado: {cliente['estado']}", align="L")
+        pdf.multi_cell(35, 5, f"Estado: {cliente['estado']}", align="L")
     if cliente.get("frete"):
-        pdf.multi_cell(20, 5, f"Tipo de Frete: {cliente['frete']}", align="L")
+        pdf.multi_cell(35, 5, f"Tipo de Frete: {cliente['frete']}", align="L")
 
     # Itens Confeccionados
     if itens_confeccionados:
