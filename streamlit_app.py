@@ -277,11 +277,11 @@ if tipo_produto == "Confeccionado":
                 remover = st.button("❌", key=f"remover_conf_{idx}")
                 if remover:
                     st.session_state['itens_confeccionados'].pop(idx)
-                    st.experimental_rerun()
+                    st.rerun()
 
     if st.button("🧹 Limpar Itens"):
         st.session_state['itens_confeccionados'] = []
-        st.experimental_rerun()
+        st.rerun()
 
     if st.session_state['itens_confeccionados']:
         m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
@@ -345,7 +345,7 @@ if tipo_produto == "Bobina":
                 remover = st.button("❌", key=f"remover_bob_{idx}")
                 if remover:
                     st.session_state['bobinas_adicionadas'].pop(idx)
-                    st.experimental_rerun()
+                    st.rerun()
 
         m_total, valor_bruto, valor_ipi, valor_final = calcular_valores_bobinas(
             st.session_state['bobinas_adicionadas'], preco_m2
@@ -359,7 +359,7 @@ if tipo_produto == "Bobina":
 
         if st.button("🧹 Limpar Bobinas"):
             st.session_state['bobinas_adicionadas'] = []
-            st.experimental_rerun()
+            st.rerun()
 
 # ============================
 # Observações e Vendedor
