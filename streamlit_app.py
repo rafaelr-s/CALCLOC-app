@@ -263,8 +263,13 @@ if tipo_produto == "Confeccionado":
         for idx, item in enumerate(st.session_state['itens_confeccionados'][:]):
             col1, col2, col3, col4 = st.columns([3,2,2,1])
             with col1:
-                st.markdown(f"**{item['produto']}**")
-                st.markdown(f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m")
+        area_item = item['comprimento'] * item['largura'] * item['quantidade']
+        valor_item = area_item * preco_m2
+        st.markdown(f"**{item['produto']}**")
+        st.markdown(
+            f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
+            f"= {area_item:.2f} m² → {_format_brl(valor_item)}"
+        )
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_conf_{idx}")
                 st.session_state['itens_confeccionados'][idx]['cor'] = cor
@@ -323,11 +328,16 @@ if tipo_produto == "Bobina":
         for idx, item in enumerate(st.session_state['bobinas_adicionadas'][:]):
             col1, col2, col3, col4 = st.columns([4,2,2,1])
             with col1:
-                detalhes = f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m"
-                if 'espessura' in item:
-                    detalhes += f" | Esp: {item['espessura']}mm"
-                st.markdown(f"**{item['produto']}**")
-                st.markdown(detalhes)
+        metros_item = item['comprimento'] * item['quantidade']
+        valor_item = metros_item * preco_m2
+        detalhes = (
+            f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
+            f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
+        )
+        if 'espessura' in item:
+            detalhes += f" | Esp: {item['espessura']}mm"
+        st.markdown(f"**{item['produto']}**")
+        st.markdown(detalhes)
             with col2:
                 cor = st.text_input("Cor:", value=item['cor'], key=f"cor_bob_{idx}")
                 st.session_state['bobinas_adicionadas'][idx]['cor'] = cor
