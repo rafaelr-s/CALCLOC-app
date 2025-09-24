@@ -121,9 +121,9 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
                 pdf.cell(0, 8, f"IPI: {_format_brl(valor_ipi)}", ln=True)
             
             pdf.set_font("Arial", "B", 10)
-            pdf.cell(0, 8, f"Valor Total com IPI: {_format_brl(valor_final)}", ln=True)
-        else:
             pdf.cell(0, 8, f"Valor Total: {_format_brl(valor_final)}", ln=True)
+        else:
+            pdf.cell(0, 8, f"Valor Total com IPI: {_format_brl(valor_final)}", ln=True)
             pdf.ln(10)
         
     # Observações
