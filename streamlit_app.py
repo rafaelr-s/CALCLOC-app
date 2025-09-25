@@ -105,7 +105,8 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"Preço por metro linear utilizado (última espessura adicionada): {_format_brl(preco_m2)}", ln=True)
+            if not any("espessura" in item for item in itens_bobinas):
+                pdf.cell(0, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
             pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
             pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
             
