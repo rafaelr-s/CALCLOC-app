@@ -10,18 +10,6 @@ from io import BytesIO
 def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-import streamlit as st
-from datetime import datetime
-import pytz
-from fpdf import FPDF
-from io import BytesIO
-
-# ============================
-# Função para formatar valores em R$
-# ============================
-def _format_brl(v):
-    return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
 # ============================
 # Função para gerar PDF
 # ============================
@@ -59,6 +47,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", size=8)
         for item in list(itens_confeccionados):
             area_item = item['comprimento'] * item['largura'] * item['quantidade']
+            # Confeccionados seguem preço global (mantive comportamento original)
             valor_item = area_item * preco_m2
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m "
@@ -96,7 +85,9 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
         pdf.set_font("Arial", size=8)
         for item in list(itens_bobinas):
             metros_item = item['comprimento'] * item['quantidade']
-            valor_item = metros_item * preco_m2
+            # Usa preco_unitario se existir (fixado por espessura), senão usa preco_m2 global
+            preco_item = item.get('preco_unitario', preco_m2)
+            valor_item = metros_item * preco_item
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m "
                 f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
@@ -104,6 +95,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             if "espessura" in item:
                 esp = f"{item['espessura']:.2f}".replace(".", ",")
                 txt += f" | Esp: {esp} mm"
+                txt += f" | Preço fixo: {_format_brl(preco_item)}"
             pdf.multi_cell(largura_util, 6, txt)
             pdf.ln(1)
 
@@ -113,7 +105,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"Preço por metro linear utilizado: {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(0, 8, f"Preço por metro linear utilizado (quando aplicável): {_format_brl(preco_m2)}", ln=True)
             pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
             pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
             
@@ -204,8 +196,13 @@ def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado="",
     return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
     
 def calcular_valores_bobinas(itens, preco_m2, tipo_pedido="Direta"):
+    # m_total continua sendo soma dos metros (útil para exibição)
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
-    valor_bruto = m_total * preco_m2
+    # Valor bruto: soma item a item usando preco_unitario quando presente
+    valor_bruto = sum(
+        (item['comprimento'] * item['quantidade']) * item.get('preco_unitario', preco_m2)
+        for item in itens
+    )
 
     if tipo_pedido == "Industrialização":
         valor_ipi = 0
@@ -355,7 +352,7 @@ if tipo_produto == "Bobina":
         quantidade = st.number_input("Quantidade:", min_value=0, value=0, step=1, key="qtd_bob")
 
     espessura_bobina = None
-    if produto.startswith(("Geomembrana", "Geo", "Vitro", "Cristal", "Filme", "Adesivo", "Block Lux")):
+    if produto.startswith(prefixos_espessura):
         espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.010, value=0.10, step=0.010, key="esp_bob")
 
     if st.button("➕ Adicionar Bobina"):
@@ -366,8 +363,12 @@ if tipo_produto == "Bobina":
             'quantidade': quantidade,
             'cor': ""
         }
+        # se tem espessura (pertence aos prefixos), adiciona o campo 'espessura' e fixa o preço naquele momento
         if espessura_bobina:
             item_bobina['espessura'] = espessura_bobina
+            # FIXAR preço por espessura: salva preco_unitario no item
+            item_bobina['preco_unitario'] = preco_m2
+
         st.session_state['bobinas_adicionadas'].append(item_bobina)
 
     if st.session_state['bobinas_adicionadas']:
@@ -376,13 +377,15 @@ if tipo_produto == "Bobina":
             col1, col2, col3, col4 = st.columns([4,2,2,1])
             with col1:
                 metros_item = item['comprimento'] * item['quantidade']
-                valor_item = metros_item * preco_m2
+                # usa preco_unitario se existir (fixado), senão usa preco_m2 global
+                valor_item = metros_item * item.get('preco_unitario', preco_m2)
                 detalhes = (
                     f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
                     f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
                 )
                 if 'espessura' in item:
                     detalhes += f" | Esp: {item['espessura']:.2f}mm"
+                    detalhes += f" | Preço fixo: {_format_brl(item.get('preco_unitario', preco_m2))}"
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(detalhes)
             with col2:
