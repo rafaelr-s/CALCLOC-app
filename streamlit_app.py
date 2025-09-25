@@ -95,7 +95,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             if "espessura" in item:
                 esp = f"{item['espessura']:.2f}".replace(".", ",")
                 txt += f" | Esp: {esp} mm"
-                txt += f" | Preço fixo: {_format_brl(preco_item)}"
+                txt += f" | Preço metro: {_format_brl(preco_item)}"
             pdf.multi_cell(largura_util, 6, txt)
             pdf.ln(1)
 
@@ -105,7 +105,7 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             pdf.set_font("Arial", "B", 11)
             pdf.cell(0, 10, "Resumo - Bobinas", ln=True)
             pdf.set_font("Arial", "", 10)
-            pdf.cell(0, 8, f"Preço por metro linear utilizado (quando aplicável): {_format_brl(preco_m2)}", ln=True)
+            pdf.cell(0, 8, f"Preço por metro linear utilizado (última espessura adicionada): {_format_brl(preco_m2)}", ln=True)
             pdf.cell(0, 8, f"Total de Metros Lineares: {str(f'{m_total:.2f}'.replace('.', ','))} m", ln=True)
             pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
             
