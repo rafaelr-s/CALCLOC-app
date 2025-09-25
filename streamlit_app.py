@@ -385,7 +385,7 @@ if tipo_produto == "Bobina":
                 )
                 if 'espessura' in item:
                     detalhes += f" | Esp: {item['espessura']:.2f}mm"
-                    detalhes += f" | custo unit: {_format_brl(item.get('preco_unitario', preco_m2))}"
+                    detalhes += f" | unit: {_format_brl(item.get('preco_unitario', preco_m2))}"
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(detalhes)
             with col2:
