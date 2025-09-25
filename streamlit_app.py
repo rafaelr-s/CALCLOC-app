@@ -90,13 +90,12 @@ def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_con
             valor_item = metros_item * preco_item
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m "
-                f"| Cor: {item.get('cor','')} }"
+                f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
             )
             if "espessura" in item:
                 esp = f"{item['espessura']:.2f}".replace(".", ",")
                 txt += f" | Esp: {esp} mm"
-                txt += f" | Preço metro: {_format_brl(preco_item)
-                txt += f" | Valor Bruto: {_format_brl(valor_item)}"
+                txt += f" | Preço metro: {_format_brl(preco_item)}"
             pdf.multi_cell(largura_util, 6, txt)
             pdf.ln(1)
 
