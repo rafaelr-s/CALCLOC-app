@@ -282,9 +282,9 @@ if tipo_produto == "Confeccionado":
     st.subheader("➕ Adicionar Item Confeccionado")
     col1, col2, col3 = st.columns(3)
     with col1:
-        comprimento = st.number_input("Comprimento (m):", min_value=0.01, value=1.0, step=0.1, key="comp_conf")
+        comprimento = st.number_input("Comprimento (m):", min_value=0.010, value=1.0, step=0.10, key="comp_conf")
     with col2:
-        largura = st.number_input("Largura (m):", min_value=0.01, value=1.0, step=0.1, key="larg_conf")
+        largura = st.number_input("Largura (m):", min_value=0.010, value=1.0, step=0.10, key="larg_conf")
     with col3:
         quantidade = st.number_input("Quantidade:", min_value=1, value=1, step=1, key="qtd_conf")
 
@@ -346,11 +346,11 @@ if tipo_produto == "Bobina":
     st.subheader("➕ Adicionar Bobina")
     col1, col2, col3 = st.columns(3)
     with col1:
-        comprimento = st.number_input("Comprimento (m):", min_value=0.01, value=50.0, step=0.1, key="comp_bob")
+        comprimento = st.number_input("Comprimento (m):", min_value=0.010, value=50.0, step=0.10, key="comp_bob")
     with col2:
-        largura_bobina = st.number_input("Largura da Bobina (m):", min_value=0.01, value=1.4, step=0.01, key="larg_bob")
+        largura_bobina = st.number_input("Largura da Bobina (m):", min_value=0.010, value=1.4, step=0.010, key="larg_bob")
     with col3:
-        quantidade = st.number_input("Quantidade:", min_value=0, value=0, step=1, key="qtd_bob")
+        quantidade = st.number_input("Quantidade:", min_value=1, value=1, step=1, key="qtd_bob")
 
     espessura_bobina = None
     if produto.startswith(prefixos_espessura):
