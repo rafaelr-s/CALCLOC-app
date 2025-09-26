@@ -11,15 +11,6 @@ def _format_brl(v):
     return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # ============================
-# Função para formatar medidas (2 casas decimais)
-# ============================
-def _format_medida(v):
-    try:
-        return f"{float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    except:
-        return str(v)
-
-# ============================
 # Função para gerar PDF
 # ============================
 def gerar_pdf(cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, preco_m2, tipo_cliente="", estado=""):
@@ -283,6 +274,15 @@ aliquota_st = None
 if produto == "Encerado" and tipo_cliente == "Revenda":
     aliquota_st = st_por_estado.get(estado, 0)
     st.warning(f"⚠️ Este produto possui ST no estado {estado} aproximado a: **{aliquota_st}%**")
+
+# ============================
+# Função para formatar medidas (2 casas decimais)
+# ============================
+def _format_medida(v):
+    try:
+        return f"{float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except:
+        return str(v)
     
 # ============================
 # Confeccionado
