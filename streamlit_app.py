@@ -306,7 +306,7 @@ if tipo_produto == "Confeccionado":
                 valor_item = area_item * preco_m2
                 st.markdown(f"**{item['produto']}**")
                 st.markdown(
-                    f"🔹 {item['quantidade']}x {item['comprimento']}m x {item['largura']}m "
+                    f"🔹 {item['quantidade']}x {item['comprimento']:.2f}m x {item['largura']:.2f}m "
                     f"= {area_item:.2f} m² → {_format_brl(valor_item)}"
                 )
             with col2:
@@ -381,7 +381,7 @@ if tipo_produto == "Bobina":
                 # usa preco_unitario se existir (fixado), senão usa preco_m2 global
                 valor_item = metros_item * item.get('preco_unitario', preco_m2)
                 detalhes = (
-                    f"🔹 {item['quantidade']}x {item['comprimento']}m | Largura: {item['largura']}m "
+                    f"🔹 {item['quantidade']}x {item['comprimento']:.2f}m | Largura: {item['largura']:.2f}m "
                     f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
                 )
                 if 'espessura' in item:
