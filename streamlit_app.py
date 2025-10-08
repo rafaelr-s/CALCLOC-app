@@ -16,7 +16,7 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     
-    # 1. Cria ou verifica a tabela orcamentos
+    # 1. Cria ou verifica a tabela orcamentos (com a nova coluna preco_m2_base)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS orcamentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,8 +42,7 @@ def init_db():
         cur.execute("ALTER TABLE orcamentos ADD COLUMN preco_m2_base REAL")
         print("Migração de DB: Coluna 'preco_m2_base' adicionada à tabela 'orcamentos'.")
 
-
-    # 3. CRIAÇÃO/MIGRAÇÃO DE TABELA: itens_confeccionados (AGORA COM preco_unitario)
+    # 3. Criação de tabelas secundárias
     cur.execute("""
         CREATE TABLE IF NOT EXISTS itens_confeccionados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,19 +52,9 @@ def init_db():
             largura REAL,
             quantidade INTEGER,
             cor TEXT,
-            preco_unitario REAL, -- <<-- NOVO CAMPO DE PREÇO TRAVADO
             FOREIGN KEY (orcamento_id) REFERENCES orcamentos(id)
         )
     """)
-    # 4. Migração de Schema: Adiciona a coluna preco_unitario se ela não existir (para conf.)
-    try:
-        cur.execute("SELECT preco_unitario FROM itens_confeccionados LIMIT 1")
-    except sqlite3.OperationalError:
-        cur.execute("ALTER TABLE itens_confeccionados ADD COLUMN preco_unitario REAL")
-        print("Migração de DB: Coluna 'preco_unitario' adicionada à tabela 'itens_confeccionados'.")
-    
-
-    # 5. Criação de tabela itens_bobinas (já tinha preco_unitario)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS itens_bobinas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,12 +95,11 @@ def salvar_orcamento(cliente, vendedor, itens_confeccionados, itens_bobinas, obs
     ))
     orcamento_id = cur.lastrowid
 
-    # NOVO INSERT: Inclui preco_unitario (travado)
     for item in itens_confeccionados:
         cur.execute("""
-            INSERT INTO itens_confeccionados (orcamento_id, produto, comprimento, largura, quantidade, cor, preco_unitario)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (orcamento_id, item['produto'], item['comprimento'], item['largura'], item['quantidade'], item.get('cor',''), item.get('preco_unitario')))
+            INSERT INTO itens_confeccionados (orcamento_id, produto, comprimento, largura, quantidade, cor)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (orcamento_id, item['produto'], item['comprimento'], item['largura'], item['quantidade'], item.get('cor','')))
 
     for item in itens_bobinas:
         cur.execute("""
@@ -137,8 +125,7 @@ def carregar_orcamento_por_id(orcamento_id):
     orc_cols = ['id','data_hora','cliente_nome','cliente_cnpj','tipo_cliente','estado','frete','tipo_pedido','vendedor_nome','vendedor_tel','vendedor_email','observacao', 'preco_m2_base']
     cur.execute("SELECT * FROM orcamentos WHERE id=?", (orcamento_id,))
     orc = cur.fetchone()
-    # NOVO SELECT: Inclui preco_unitario (para confeccionados)
-    cur.execute("SELECT produto, comprimento, largura, quantidade, cor, preco_unitario FROM itens_confeccionados WHERE orcamento_id=?", (orcamento_id,))
+    cur.execute("SELECT produto, comprimento, largura, quantidade, cor FROM itens_confeccionados WHERE orcamento_id=?", (orcamento_id,))
     confecc = cur.fetchall()
     cur.execute("SELECT produto, comprimento, largura, quantidade, cor, espessura, preco_unitario FROM itens_bobinas WHERE orcamento_id=?", (orcamento_id,))
     bob = cur.fetchall()
@@ -155,51 +142,38 @@ def _format_brl(v):
         return f"R$ {v}"
 
 # ============================
-# Cálculos (AGORA USANDO O PREÇO TRAVADO DO ITEM)
+# Cálculos
 # ============================
 st_por_estado = {} 
 
-# MUDANÇA: Função calcular_valores_confeccionados usa o preço travado de cada item
-def calcular_valores_confeccionados(itens, preco_m2_base, tipo_cliente="", estado="", tipo_pedido="Direta"):
+def calcular_valores_confeccionados(itens, preco_m2, tipo_cliente="", estado="", tipo_pedido="Direta"):
     if not itens:
         return 0.0, 0.0, 0.0, 0.0, 0.0, 0
-    
-    IPI_CONFECCIONADO_DEFAULT = 0.0325
-    IPI_ZERO_PRODS = ["Acrylic", "Agora"]
-    IPI_ZERO_PREFIXES = ["Tela de Sombreamento"]
-
-    m2_total = 0.0
-    valor_bruto_acumulado = 0.0
-    valor_ipi_acumulado = 0.0
-
-    # 1. Calcula Bruto e IPI item por item usando o preço travado
-    for item in itens:
-        area_item = item['comprimento'] * item['largura'] * item['quantidade']
-        # Usa o preço travado no item. Se não houver (para orçamentos antigos), usa o preço base do orçamento.
-        preco_item = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2_base 
-        
-        m2_total += area_item
-        valor_item_bruto = area_item * preco_item
-        valor_bruto_acumulado += valor_item_bruto
-
-        if tipo_pedido != "Industrialização":
-            produto = item.get('produto', '')
-            ipi_rate = IPI_CONFECCIONADO_DEFAULT
-
-            if produto in IPI_ZERO_PRODS or any(produto.startswith(prefix) for prefix in IPI_ZERO_PREFIXES):
-                ipi_rate = 0.0
-            
-            valor_ipi_acumulado += valor_item_bruto * ipi_rate
-
-    valor_bruto = valor_bruto_acumulado
-    
-    # 2. Finaliza cálculo
+    m2_total = sum(item['comprimento'] * item['largura'] * item['quantidade'] for item in itens)
+    valor_bruto = m2_total * preco_m2
+    # Lógica de IPI e ST... (mantida)
     if tipo_pedido == "Industrialização":
         valor_ipi = 0
         valor_st = 0
         aliquota_st = 0
         valor_final = valor_bruto
     else:
+        IPI_CONFECCIONADO_DEFAULT = 0.0325
+        IPI_ZERO_PRODS = ["Acrylic", "Agora"]
+        IPI_ZERO_PREFIXES = ["Tela de Sombreamento"]
+        
+        valor_ipi_acumulado = 0.0
+        
+        for item in itens:
+            produto = item.get('produto', '')
+            valor_item = item['comprimento'] * item['largura'] * item['quantidade'] * preco_m2
+            ipi_rate = IPI_CONFECCIONADO_DEFAULT
+
+            if produto in IPI_ZERO_PRODS or any(produto.startswith(prefix) for prefix in IPI_ZERO_PREFIXES):
+                ipi_rate = 0.0
+            
+            valor_ipi_acumulado += valor_item * ipi_rate
+
         valor_ipi = valor_ipi_acumulado
         valor_final = valor_bruto + valor_ipi
         
@@ -212,19 +186,19 @@ def calcular_valores_confeccionados(itens, preco_m2_base, tipo_cliente="", estad
 
     return m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st
 
-# MUDANÇA: A função Bobinas já usava o preço travado, mas garantimos consistência
-def calcular_valores_bobinas(itens, preco_m2_base, tipo_pedido="Direta"):
+# FUNÇÃO CORRIGIDA PARA IPI DE CAPOTA MARÍTIMA
+def calcular_valores_bobinas(itens, preco_m2, tipo_pedido="Direta"):
     IPI_RATE_DEFAULT = 0.0975 # 9.75%
     
     if not itens:
+        # Retorna a alíquota padrão se não houver itens
         return 0.0, 0.0, 0.0, 0.0, IPI_RATE_DEFAULT
 
     m_total = sum(item['comprimento'] * item['quantidade'] for item in itens)
     
-    # Usa o preco_unitario travado, ou preco_m2_base (fallback)
     def preco_item_of(item):
         pu = item.get('preco_unitario') 
-        return pu if (pu is not None) else preco_m2_base 
+        return pu if (pu is not None) else preco_m2 
 
     valor_bruto = sum((item['comprimento'] * item['quantidade']) * preco_item_of(item) for item in itens)
 
@@ -233,19 +207,22 @@ def calcular_valores_bobinas(itens, preco_m2_base, tipo_pedido="Direta"):
     else:
         IPI_RATE_CAPOTA = 0.0325 # 3.25%
         
+        # Verifica se algum item é "Capota Marítima"
         has_capota_maritima = any(item.get('produto') == "Capota Marítima" for item in itens)
         
+        # Define a alíquota a ser usada
         ipi_rate_to_use = IPI_RATE_CAPOTA if has_capota_maritima else IPI_RATE_DEFAULT
         
         valor_ipi = valor_bruto * ipi_rate_to_use
         valor_final = valor_bruto + valor_ipi
 
+        # Novo: Retorna a taxa de IPI utilizada para exibição
         return m_total, valor_bruto, valor_ipi, valor_final, ipi_rate_to_use
-    
+
 # ============================
 # Função para gerar PDF
 # ============================
-def gerar_pdf(orcamento_id, cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, preco_m2_base, tipo_cliente="", estado=""):
+def gerar_pdf(orcamento_id, cliente, vendedor, itens_confeccionados, itens_bobinas, resumo_conf, resumo_bob, observacao, preco_m2, tipo_cliente="", estado=""):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -286,13 +263,10 @@ def gerar_pdf(orcamento_id, cliente, vendedor, itens_confeccionados, itens_bobin
         pdf.set_font("Arial", size=8)
         for item in itens_confeccionados:
             area_item = item['comprimento'] * item['largura'] * item['quantidade']
-            # NOVO: Usa o preço travado do item
-            preco_item_travado = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2_base 
-            valor_item = area_item * preco_item_travado
-            
+            valor_item = area_item * preco_m2
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m x {item['largura']}m "
-                f"| Cor: {item.get('cor','')} | Preço Unitário: {_format_brl(preco_item_travado)} | Valor Bruto: {_format_brl(valor_item)}"
+                f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
             )
             pdf.multi_cell(largura_util, 6, txt)
             pdf.ln(1)
@@ -304,8 +278,7 @@ def gerar_pdf(orcamento_id, cliente, vendedor, itens_confeccionados, itens_bobin
         pdf.set_font("Arial", "B", 11)
         pdf.cell(0, 10, "Resumo - Confeccionados", ln=True)
         pdf.set_font("Arial", "", 10)
-        # Exibe o preco_m2_base que foi o último digitado na sessão.
-        pdf.cell(0, 8, f"Preço base da sessão: {_format_brl(preco_m2_base)}", ln=True) 
+        pdf.cell(0, 8, f"Preço por m² utilizado: {_format_brl(preco_m2)}", ln=True)
         pdf.cell(0, 8, f"Área Total: {str(f'{m2_total:.2f}'.replace('.', ','))} m²", ln=True)
         pdf.cell(0, 8, f"Valor Bruto: {_format_brl(valor_bruto)}", ln=True)
         if valor_ipi>0:
@@ -324,12 +297,11 @@ def gerar_pdf(orcamento_id, cliente, vendedor, itens_confeccionados, itens_bobin
         pdf.set_font("Arial", size=8)
         for item in itens_bobinas:
             metros_item = item['comprimento'] * item['quantidade']
-            # Usa o preço travado do item
-            preco_item = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2_base
+            preco_item = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2
             valor_item = metros_item * preco_item
             txt = (
                 f"{item['quantidade']}x {item['produto']} - {item['comprimento']}m | Largura: {item['largura']}m "
-                f"| Cor: {item.get('cor','')} | Preço Unitário: {_format_brl(preco_item)} | Valor Bruto: {_format_brl(valor_item)}"
+                f"| Cor: {item.get('cor','')} | Valor Bruto: {_format_brl(valor_item)}"
             )
             if "espessura" in item and item.get('espessura') is not None:
                 esp = f"{item['espessura']:.2f}".replace(".", ",")
@@ -628,18 +600,14 @@ if menu == "Novo Orçamento":
             largura = st.number_input("Largura (m):", min_value=0.010, value=st.session_state.get("larg_conf", 1.0), step=0.10, key="larg_conf")
         with col3:
             quantidade = st.number_input("Quantidade:", min_value=1, value=st.session_state.get("qtd_conf", 1), step=1, key="qtd_conf")
-            
-            cor_conf = st.text_input("Cor (Opcional):", value="", key="cor_conf_input") 
 
         if st.button("➕ Adicionar Medida", key="add_conf"):
-            preco_travado = st.session_state.get('preco_m2_base', 0.0)
             st.session_state['itens_confeccionados'].append({
                 'produto': produto,
                 'comprimento': float(comprimento),
                 'largura': float(largura),
                 'quantidade': int(quantidade),
-                'cor': cor_conf,
-                'preco_unitario': preco_travado
+                'cor': ""
             })
 
         if st.session_state['itens_confeccionados']:
@@ -648,14 +616,11 @@ if menu == "Novo Orçamento":
                 col1, col2, col3, col4 = st.columns([3,2,2,1])
                 with col1:
                     area_item = item['comprimento'] * item['largura'] * item['quantidade']
-                    # NOVO CÁLCULO DE EXIBIÇÃO: Usa o preço travado do item
-                    preco_item_travado = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2
-                    valor_item = area_item * preco_item_travado
-
+                    valor_item = area_item * preco_m2
                     st.markdown(f"**{item['produto']}**")
                     st.markdown(
                         f"🔹 {item['quantidade']}x {item['comprimento']:.2f}m x {item['largura']:.2f}m "
-                        f"= {area_item:.2f} m² | R$/m²: {_format_brl(preco_item_travado)} → {_format_brl(valor_item)}"
+                        f"= {area_item:.2f} m² → {_format_brl(valor_item)}"
                     )
                 with col2:
                     # Usando chaves únicas para inputs dinâmicos
@@ -671,7 +636,6 @@ if menu == "Novo Orçamento":
             st.rerun()
 
         if st.session_state['itens_confeccionados']:
-            # NOVO CÁLCULO: Manda o preço base (para fallback de orçamentos antigos)
             m2_total, valor_bruto, valor_ipi, valor_final, valor_st, aliquota_st = calcular_valores_confeccionados(
                 st.session_state['itens_confeccionados'], preco_m2, tipo_cliente, estado, tipo_pedido
             )
@@ -703,18 +667,16 @@ if menu == "Novo Orçamento":
             espessura_bobina = st.number_input("Espessura da Bobina (mm):", min_value=0.010, value=st.session_state.get("esp_bob", 0.10), step=0.010, key="esp_bob")
 
         if st.button("➕ Adicionar Bobina", key="add_bob"):
-            # AÇÃO CORRETA: Trava o preço digitado no campo de input
-            preco_travado = float('preco_m2_base', 0.0)
             item_bobina = {
                 'produto': produto,
                 'comprimento': float(comprimento),
                 'largura': float(largura_bobina),
                 'quantidade': int(quantidade),
-                'cor': "",
-                'preco_unitario': preco_travado
+                'cor': ""
             }
             if espessura_bobina is not None:
                 item_bobina['espessura'] = float(espessura_bobina)
+                item_bobina['preco_unitario'] = preco_m2
             st.session_state['bobinas_adicionadas'].append(item_bobina)
 
         if st.session_state['bobinas_adicionadas']:
@@ -723,17 +685,14 @@ if menu == "Novo Orçamento":
                 col1, col2, col3, col4 = st.columns([4,2,2,1])
                 with col1:
                     metros_item = item['comprimento'] * item['quantidade']
-                    # NOVO CÁLCULO DE EXIBIÇÃO: Usa o preço travado do item
-                    preco_item_travado = item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2
-                    valor_item = metros_item * preco_item_travado
-
+                    valor_item = metros_item * (item.get('preco_unitario') if item.get('preco_unitario') is not None else preco_m2)
                     detalhes = (
                         f"🔹 {item['quantidade']}x {item['comprimento']:.2f}m | Largura: {item['largura']:.2f}m "
-                        f"= {metros_item:.2f} m | unit: {_format_brl(preco_item_travado)} → {_format_brl(valor_item)}"
+                        f"= {metros_item:.2f} m → {_format_brl(valor_item)}"
                     )
                     if 'espessura' in item and item.get('espessura') is not None:
                         detalhes += f" | Esp: {item['espessura']:.2f}mm"
-                    
+                        detalhes += f" | unit: {_format_brl(item.get('preco_unitario', preco_m2))}"
                     st.markdown(f"**{item['produto']}**")
                     st.markdown(detalhes)
                 with col2:
@@ -745,7 +704,7 @@ if menu == "Novo Orçamento":
                         st.session_state['bobinas_adicionadas'].pop(idx)
                         st.rerun()
 
-            # NOVO CÁLCULO: Manda o preço base (para fallback de orçamentos antigos)
+            # Recebe a taxa de IPI utilizada
             m_total, valor_bruto_bob, valor_ipi_bob, valor_final_bob, ipi_rate_bob = calcular_valores_bobinas(
                 st.session_state['bobinas_adicionadas'], preco_m2, tipo_pedido
             )
@@ -837,20 +796,9 @@ if menu == "Novo Orçamento":
         st.success(f"✅ Orçamento salvo com ID {orcamento_id}")
 
         # Resumos
-        # NOVO CÁLCULO: Manda o preço base (para fallback de orçamentos antigos)
-        resumo_conf = calcular_valores_confeccionados(
-            st.session_state["itens_confeccionados"], 
-            st.session_state.get("preco_m2",0.0), 
-            st.session_state.get("tipo_cliente"," "), 
-            st.session_state.get("estado",""), 
-            st.session_state.get("tipo_pedido","Direta")
-        ) if st.session_state["itens_confeccionados"] else None
+        resumo_conf = calcular_valores_confeccionados(st.session_state["itens_confeccionados"], st.session_state.get("preco_m2",0.0), st.session_state.get("tipo_cliente"," "), st.session_state.get("estado",""), st.session_state.get("tipo_pedido","Direta")) if st.session_state["itens_confeccionados"] else None
         # Chamada retorna 5 valores
-        resumo_bob = calcular_valores_bobinas(
-            st.session_state["bobinas_adicionadas"], 
-            st.session_state.get("preco_m2",0.0), 
-            st.session_state.get("tipo_pedido","Direta")
-        ) if st.session_state["bobinas_adicionadas"] else None
+        resumo_bob = calcular_valores_bobinas(st.session_state["bobinas_adicionadas"], st.session_state.get("preco_m2",0.0), st.session_state.get("tipo_pedido","Direta")) if st.session_state["bobinas_adicionadas"] else None
 
         # Gerar PDF bytes (Passando orcamento_id)
         pdf_bytes = gerar_pdf(
@@ -862,7 +810,7 @@ if menu == "Novo Orçamento":
             resumo_conf,
             resumo_bob,
             st.session_state.get("obs",""),
-            st.session_state.get("preco_m2",0.0), # Manda o preço base para exibição
+            st.session_state.get("preco_m2",0.0),
             tipo_cliente=st.session_state.get("tipo_cliente"," "),
             estado=st.session_state.get("estado","")
         )
@@ -1021,17 +969,14 @@ if menu == "Histórico de Orçamentos":
 
                     if confecc:
                         st.markdown("### ⬛ Itens Confeccionados")
-                        # OBS: Confecc agora tem 6 elementos, o último é o preco_unitario
                         for c in confecc:
-                            preco_unit = c[5] if c[5] is not None else preco_m2_base
-                            st.markdown(f"- **{c[0]}**: {c[3]}x {c[1]:.2f}m x {c[2]:.2f}m | Cor: {c[4]} | R$/m²: {_format_brl(preco_unit)}")
-                    
+                            st.markdown(f"- **{c[0]}**: {c[3]}x {c[1]:.2f}m x {c[2]:.2f}m | Cor: {c[4]}")
+
                     if bob:
                         st.markdown("### 🔘 Itens Bobinas")
                         for b in bob:
                             esp = f" | Esp: {b[5]:.2f}mm" if b[5] is not None else ""
-                            preco_unit = b[6] if b[6] is not None else preco_m2_base
-                            st.markdown(f"- **{b[0]}**: {b[3]}x {b[1]:.2f}m | Largura: {b[2]:.2f}m{esp} | Cor: {b[4]} | R$/m: {_format_brl(preco_unit)}")
+                            st.markdown(f"- **{b[0]}**: {b[3]}x {b[1]:.2f}m | Largura: {b[2]:.2f}m{esp} | Cor: {b[4]}")
 
                     col1, col2, col3 = st.columns([1,1,1])
                     with col1:
